@@ -1,25 +1,25 @@
 const { sh, cli } = require("tasksfile");
 
 function cleanAll() {
-    sh("rm -rf build");
+    sh("rm -rf build_nodejs");
 }
 
 function createFieldSources() {
-    sh("mkdir -p build");
+    sh("mkdir -p build_nodejs");
     sh("npm install", {cwd: "depends/ffiasm"});
-    sh("node ../depends/ffiasm/src/buildzqfield.js -q 21888242871839275222246405745257275088696311157297823662689037894645226208583 -n Fq", {cwd: "build"});
-    sh("node ../depends/ffiasm/src/buildzqfield.js -q 21888242871839275222246405745257275088548364400416034343698204186575808495617 -n Fr", {cwd: "build"});
+    sh("node ../depends/ffiasm/src/buildzqfield.js -q 21888242871839275222246405745257275088696311157297823662689037894645226208583 -n Fq", {cwd: "build_nodejs"});
+    sh("node ../depends/ffiasm/src/buildzqfield.js -q 21888242871839275222246405745257275088548364400416034343698204186575808495617 -n Fr", {cwd: "build_nodejs"});
     
     if (process.platform === "darwin") {
-        sh("nasm -fmacho64 --prefix _ fq.asm", {cwd: "build"});
+        sh("nasm -fmacho64 --prefix _ fq.asm", {cwd: "build_nodejs"});
     }  else if (process.platform === "linux") {
-        sh("nasm -felf64 fq.asm", {cwd: "build"});
+        sh("nasm -felf64 fq.asm", {cwd: "build_nodejs"});
     } else throw("Unsupported platform");
 
     if (process.platform === "darwin") {
-        sh("nasm -fmacho64 --prefix _ fr.asm", {cwd: "build"});
+        sh("nasm -fmacho64 --prefix _ fr.asm", {cwd: "build_nodejs"});
     }  else if (process.platform === "linux") {
-        sh("nasm -felf64 fr.asm", {cwd: "build"});
+        sh("nasm -felf64 fr.asm", {cwd: "build_nodejs"});
     } else throw("Unsupported platform");
 }
 
@@ -56,7 +56,7 @@ function buildProverServer() {
         " fr.o"+
         " -L../depends/pistache/build/src -lpistache"+
         " -o proverServer"+
-        " -fmax-errors=5 -std=c++17 -DUSE_OPENMP -DUSE_ASM -DARCH_X86_64 -DUSE_LOGGER -pthread -lgmp -lsodium -fopenmp -O3", {cwd: "build", nopipe: true}
+        " -fmax-errors=5 -std=c++17 -DUSE_OPENMP -DUSE_ASM -DARCH_X86_64 -DUSE_LOGGER -pthread -lgmp -lsodium -fopenmp -O3", {cwd: "build_nodejs", nopipe: true}
     );
 }
 
@@ -83,7 +83,7 @@ function buildProver() {
         " fr.cpp"+
         " fr.o"+
         " -o prover" +
-        " -fmax-errors=5 -std=c++17 -DUSE_OPENMP -DUSE_ASM -DARCH_X86_64 -pthread -lgmp -lsodium -fopenmp -O3", {cwd: "build", nopipe: true}
+        " -fmax-errors=5 -std=c++17 -DUSE_OPENMP -DUSE_ASM -DARCH_X86_64 -pthread -lgmp -lsodium -fopenmp -O3", {cwd: "build_nodejs", nopipe: true}
     );
 }
 
