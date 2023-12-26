@@ -18,7 +18,14 @@ sudo apt-get install build-essential cmake libgmp-dev libsodium-dev nasm curl m4
 
 ## Compile prover in standalone mode
 
-### Compile prover for x86_64 host machine
+### using npm script
+```
+npm run task createFieldSources
+npm run task buildProver
+```
+
+### using cmake
+#### Compile prover for x86_64 host machine
 
 ```sh
 git submodule init
@@ -29,7 +36,7 @@ cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=../package
 make -j4 && make install
 ```
 
-### Compile prover for macOS arm64 host machine
+#### Compile prover for macOS arm64 host machine
 
 ```sh
 git submodule init
@@ -40,7 +47,7 @@ cmake .. -DTARGET_PLATFORM=macos_arm64 -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTAL
 make -j4 && make install
 ```
 
-### Compile prover for linux arm64 host machine
+#### Compile prover for linux arm64 host machine
 
 ```sh
 git submodule init
@@ -51,7 +58,7 @@ cmake .. -DTARGET_PLATFORM=arm64_host -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL
 make -j4 && make install
 ```
 
-### Compile prover for linux arm64 machine
+#### Compile prover for linux arm64 machine
 
 ```sh
 git submodule init
@@ -62,7 +69,7 @@ cmake .. -DTARGET_PLATFORM=aarch64 -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PR
 make -j4 && make install
 ```
 
-### Compile prover for Android
+#### Compile prover for Android
 
 Install Android NDK from https://developer.android.com/ndk or with help of "SDK Manager" in Android Studio.
 
@@ -92,7 +99,7 @@ cmake .. -DTARGET_PLATFORM=ANDROID -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PR
 make -j4 && make install
 ```
 
-### Compile prover for iOS
+#### Compile prover for iOS
 
 Install Xcode
 
@@ -146,8 +153,8 @@ by this one
 npm install
 git submodule init
 git submodule update
-npx task buildPistache
-npx task buildProverServer
+npm run task buildPistache
+npm run task buildProverServer
 ```
 
 ## Launch prover in server mode

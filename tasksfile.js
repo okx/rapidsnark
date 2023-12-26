@@ -42,6 +42,7 @@ function buildProverServer() {
         " ../src/proverapi.cpp"+
         " ../src/fullprover.cpp"+
         " ../src/binfile_utils.cpp"+
+        " ../src/fileloader.cpp" +
         " ../src/wtns_utils.cpp"+
         " ../src/zkey_utils.cpp"+
         " ../src/logger.cpp"+
@@ -55,7 +56,7 @@ function buildProverServer() {
         " fr.o"+
         " -L../depends/pistache/build/src -lpistache"+
         " -o proverServer"+
-        " -fmax-errors=5 -pthread -std=c++17 -fopenmp -lgmp -lsodium -g -DSANITY_CHECK", {cwd: "build", nopipe: true}
+        " -fmax-errors=5 -std=c++17 -DUSE_OPENMP -DUSE_ASM -DARCH_X86_64 -DUSE_LOGGER -pthread -lgmp -lsodium -fopenmp -O3", {cwd: "build", nopipe: true}
     );
 }
 
@@ -68,6 +69,8 @@ function buildProver() {
         " -I../depends/json/single_include"+
         " ../src/main_prover.cpp"+
         " ../src/binfile_utils.cpp"+
+        " ../src/fileloader.cpp" +
+        " ../src/prover.cpp"+
         " ../src/zkey_utils.cpp"+
         " ../src/wtns_utils.cpp"+
         " ../src/logger.cpp"+
@@ -80,7 +83,7 @@ function buildProver() {
         " fr.cpp"+
         " fr.o"+
         " -o prover" +
-        " -fmax-errors=5 -std=c++17 -pthread -lgmp -lsodium -O3 -fopenmp", {cwd: "build", nopipe: true}
+        " -fmax-errors=5 -std=c++17 -DUSE_OPENMP -DUSE_ASM -DARCH_X86_64 -pthread -lgmp -lsodium -fopenmp -O3", {cwd: "build", nopipe: true}
     );
 }
 
