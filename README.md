@@ -43,12 +43,6 @@ node tools/request.js <input.json> <circuit>
 
 ## Compile prover in standalone mode
 
-### using npm script
-```
-npm run task createFieldSources
-npm run task buildProver
-```
-
 ### using cmake
 the `CMakeLists.txt` int the root folder includes `cmake/platform.cmake` which setup the environment for `GMP`
 #### Compile prover for x86_64 host machine
@@ -174,6 +168,11 @@ by this one
 ```
 
 
+### using npm script
+```
+npm run task createFieldSources
+npm run task buildProver
+```
 ## Benchmark
 
 This prover parallelizes as much as it can the proof generation.
