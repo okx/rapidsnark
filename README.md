@@ -16,6 +16,31 @@ In ubuntu:
 sudo apt-get install build-essential cmake libgmp-dev libsodium-dev nasm curl m4
 ```
 
+## Compile prover in server mode
+
+```sh
+npm install
+git submodule init
+git submodule update
+npm run task buildPistache
+npm run task buildProverServer
+```
+
+## Launch prover in server mode
+```sh
+export LD_LIBRARY_PATH=depends/pistache/build/src
+./build/proverServer  <port> <circuit1_zkey> <circuit2_zkey> ... <circuitN_zkey>
+```
+
+For every `circuit.circom` you have to generate with circom with --c option the `circuit_cpp` and after compilation you have to copy the executable into the `build` folder so the server can generate the witness and then the proof based on this witness.
+You have an example of the usage calling the server endpoints to generate the proof with Nodejs in `/tools/request.js`.
+
+To test a request you should pass an `input.json` as a parameter to the request call.
+```sh
+node tools/request.js <input.json> <circuit>
+```
+
+
 ## Compile prover in standalone mode
 
 ### using npm script
@@ -25,6 +50,7 @@ npm run task buildProver
 ```
 
 ### using cmake
+the `CMakeLists.txt` int the root folder includes `cmake/platform.cmake` which setup the environment for `GMP`
 #### Compile prover for x86_64 host machine
 
 ```sh
@@ -147,28 +173,6 @@ by this one
 ./package/bin/prover <circuit.zkey> <witness.wtns> <proof.json> <public.json>
 ```
 
-## Compile prover in server mode
-
-```sh
-npm install
-git submodule init
-git submodule update
-npm run task buildPistache
-npm run task buildProverServer
-```
-
-## Launch prover in server mode
-```sh
-./build/proverServer  <port> <circuit1_zkey> <circuit2_zkey> ... <circuitN_zkey>
-```
-
-For every `circuit.circom` you have to generate with circom with --c option the `circuit_cpp` and after compilation you have to copy the executable into the `build` folder so the server can generate the witness and then the proof based on this witness.
-You have an example of the usage calling the server endpoints to generate the proof with Nodejs in `/tools/request.js`.
-
-To test a request you should pass an `input.json` as a parameter to the request call.
-```sh
-node tools/request.js <input.json> <circuit>
-```
 
 ## Benchmark
 
