@@ -2,18 +2,21 @@
 #include <string>
 #include <memory.h>
 #include <stdexcept>
-
 #include "binfile_utils.hpp"
 #include "fileloader.hpp"
+#include "logger.hpp"
 
+using namespace CPlusPlusLogging;
 namespace BinFileUtils {
+
 
 BinFile::BinFile(const void *fileData, size_t fileSize, std::string _type, uint32_t maxVersion) {
 
     size = fileSize;
     addr = malloc(size);
+    LOG_DEBUG(("start memcopy file: " + _type).c_str());
     memcpy(addr, fileData, size);
-
+    LOG_DEBUG(("end memcopy file: " + _type).c_str());
     type.assign((const char *)addr, 4);
     pos = 4;
 

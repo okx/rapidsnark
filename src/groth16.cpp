@@ -160,7 +160,7 @@ std::unique_ptr<Proof<Engine>> Prover<Engine>::prove(typename Engine::FrElement 
 
     LOG_TRACE("Start iFFT A");
     fft->ifft(a, domainSize);
-    LOG_TRACE("a After ifft:");
+    LOG_TRACE("End iFFT A");
     LOG_DEBUG(E.fr.toString(a[0]).c_str());
     LOG_DEBUG(E.fr.toString(a[1]).c_str());
     LOG_TRACE("Start Shift A");
@@ -168,17 +168,17 @@ std::unique_ptr<Proof<Engine>> Prover<Engine>::prove(typename Engine::FrElement 
     for (u_int64_t i=0; i<domainSize; i++) {
         E.fr.mul(a[i], a[i], fft->root(domainPower+1, i));
     }
-    LOG_TRACE("a After shift:");
+    LOG_TRACE("End Shift A");
     LOG_DEBUG(E.fr.toString(a[0]).c_str());
     LOG_DEBUG(E.fr.toString(a[1]).c_str());
     LOG_TRACE("Start FFT A");
     fft->fft(a, domainSize);
-    LOG_TRACE("a After fft:");
+    LOG_TRACE("End FFT A");
     LOG_DEBUG(E.fr.toString(a[0]).c_str());
     LOG_DEBUG(E.fr.toString(a[1]).c_str());
     LOG_TRACE("Start iFFT B");
     fft->ifft(b, domainSize);
-    LOG_TRACE("b After ifft:");
+    LOG_TRACE("End iFFT B");
     LOG_DEBUG(E.fr.toString(b[0]).c_str());
     LOG_DEBUG(E.fr.toString(b[1]).c_str());
     LOG_TRACE("Start Shift B");
@@ -186,18 +186,18 @@ std::unique_ptr<Proof<Engine>> Prover<Engine>::prove(typename Engine::FrElement 
     for (u_int64_t i=0; i<domainSize; i++) {
         E.fr.mul(b[i], b[i], fft->root(domainPower+1, i));
     }
-    LOG_TRACE("b After shift:");
+    LOG_TRACE("End Shift B");
     LOG_DEBUG(E.fr.toString(b[0]).c_str());
     LOG_DEBUG(E.fr.toString(b[1]).c_str());
     LOG_TRACE("Start FFT B");
     fft->fft(b, domainSize);
-    LOG_TRACE("b After fft:");
+    LOG_TRACE("End FFT B");
     LOG_DEBUG(E.fr.toString(b[0]).c_str());
     LOG_DEBUG(E.fr.toString(b[1]).c_str());
 
     LOG_TRACE("Start iFFT C");
     fft->ifft(c, domainSize);
-    LOG_TRACE("c After ifft:");
+    LOG_TRACE("End iFFT C");
     LOG_DEBUG(E.fr.toString(c[0]).c_str());
     LOG_DEBUG(E.fr.toString(c[1]).c_str());
     LOG_TRACE("Start Shift C");
@@ -205,12 +205,12 @@ std::unique_ptr<Proof<Engine>> Prover<Engine>::prove(typename Engine::FrElement 
     for (u_int64_t i=0; i<domainSize; i++) {
         E.fr.mul(c[i], c[i], fft->root(domainPower+1, i));
     }
-    LOG_TRACE("c After shift:");
+    LOG_TRACE("End Shift C");
     LOG_DEBUG(E.fr.toString(c[0]).c_str());
     LOG_DEBUG(E.fr.toString(c[1]).c_str());
     LOG_TRACE("Start FFT C");
     fft->fft(c, domainSize);
-    LOG_TRACE("c After fft:");
+    LOG_TRACE("End FFT C");
     LOG_DEBUG(E.fr.toString(c[0]).c_str());
     LOG_DEBUG(E.fr.toString(c[1]).c_str());
 
@@ -221,7 +221,7 @@ std::unique_ptr<Proof<Engine>> Prover<Engine>::prove(typename Engine::FrElement 
         E.fr.sub(a[i], a[i], c[i]);
         E.fr.fromMontgomery(a[i], a[i]);
     }
-    LOG_TRACE("abc:");
+    LOG_TRACE("End ABC");
     LOG_DEBUG(E.fr.toString(a[0]).c_str());
     LOG_DEBUG(E.fr.toString(a[1]).c_str());
 

@@ -11,9 +11,10 @@
 #include "wtns_utils.hpp"
 #include "groth16.hpp"
 #include "binfile_utils.hpp"
+#include "logger.hpp"
 
 using json = nlohmann::json;
-
+using namespace CPlusPlusLogging;
 static size_t ProofBufferMinSize()
 {
     return 726;
