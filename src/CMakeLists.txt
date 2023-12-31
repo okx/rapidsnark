@@ -1,6 +1,37 @@
 link_libraries(${GMP_LIB})
-
 add_definitions(${GMP_DEFINIONS})
+
+OPTION(USE_CUDA "whether integrate with gpu" OFF) # Enabled by default
+if(USE_CUDA)
+message("USE CUDA")
+
+add_definitions(-DUSE_CUDA)
+if(NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
+  set(CMAKE_CUDA_ARCHITECTURES 70 86)
+endif()
+project(ffiasm LANGUAGES CXX CUDA ASM)
+set(CMAKE_CXX_STANDARD 17)
+find_package(CUDA REQUIRED)
+enable_language("CUDA")
+set(PROJECT_CUDA_SOURCE_DIR ${CMAKE_SOURCE_DIR}/depends/ffiasm/depends/cryptography_cuda/cuda)
+include_directories(SYSTEM ${CUDA_INCLUDE_DIRS})
+include_directories(${PROJECT_CUDA_SOURCE_DIR})
+include_directories("../depends/ffiasm/depends/cryptography_cuda/depends/blst/src")  # the cuda library is dependent on blst
+set(LIB_SOURCES
+../depends/ffiasm/depends/cryptography_cuda/src/lib.h
+../depends/ffiasm/depends/cryptography_cuda/src/lib.cu
+../depends/ffiasm/depends/cryptography_cuda/cuda/util/all_gpus.cpp
+)
+add_library(cryptography_cuda SHARED ${LIB_SOURCES} )
+## todo: pass feature as environment variable, or as option
+target_compile_definitions(cryptography_cuda PUBLIC -DFEATURE_BN128)
+
+
+
+
+endif()
+
+
 
 if(USE_ASM)
     if(ARCH MATCHES "arm64")
@@ -112,8 +143,13 @@ add_library(rapidsnarkStaticFrFq STATIC ${LIB_SOURCES} ${FQ_SOURCES} ${FR_SOURCE
 set_target_properties(rapidsnarkStaticFrFq PROPERTIES POSITION_INDEPENDENT_CODE ON)
 set_target_properties(rapidsnarkStaticFrFq PROPERTIES OUTPUT_NAME rapidsnark-fr-fq)
 
+
 add_executable(prover main_prover.cpp)
 target_link_libraries(prover rapidsnarkStatic)
+if(USE_CUDA)
+target_link_libraries(prover cryptography_cuda)    
+endif(USE_CUDA)
+
 
 add_library(rapidsnark SHARED ${LIB_SOURCES})
 
