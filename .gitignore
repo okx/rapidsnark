@@ -77,3 +77,9 @@ build/fq_asm.o
 build/fr_asm.o
 
 .idea/
+build/CMakeFiles
+build/src
+build/cmake_install.cmake
+build/CMakeCache.txt
+build/Makefile
+build/*.txt

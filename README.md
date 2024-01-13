@@ -185,3 +185,9 @@ The prover is much faster that snarkjs and faster than bellman.
 ## License
 
 rapidsnark is part of the iden3 project copyright 2021 0KIMS association and published with GPL-3 license. Please check the COPYING file for more details.
+
+
+
+## dependencies
+- ffiasm: master
+- cryptography_cuda: dev

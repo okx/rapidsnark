@@ -28,7 +28,7 @@ if(USE_CUDA)
     add_library(cryptography_cuda STATIC ${LIB_SOURCES})
 
     # # todo: pass feature as environment variable, or as option
-    target_compile_definitions(cryptography_cuda PUBLIC -DFEATURE_BN128 -D__ADX__)
+    target_compile_definitions(cryptography_cuda PUBLIC -DFEATURE_BN254 -D__ADX__)
     target_link_libraries(cryptography_cuda /data/workspace/cliff/rapidsnark/depends/ffiasm/depends/cryptography_cuda/depends/blst/libblst.a)
 endif()
 
