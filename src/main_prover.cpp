@@ -4,12 +4,15 @@
 
 #include "fileloader.hpp"
 #include "prover.h"
+#include "logger.hpp"
 
+using namespace CPlusPlusLogging;
 #define handle_error(msg) \
            do { perror(msg); exit(EXIT_FAILURE); } while (0)
 
 
 const size_t BufferSize = 16384;
+
 
 
 int main(int argc, char **argv)
@@ -20,6 +23,10 @@ int main(int argc, char **argv)
         return EXIT_FAILURE;
     }
 
+    Logger::getInstance()->enableConsoleLogging();
+    Logger::getInstance()->updateLogLevel(LOG_LEVEL_DEBUG);
+    Logger::getInstance()->enableFileLogging();
+    LOG_INFO("start run prover in standalone mode...");
     try {
         std::string zkeyFilename = argv[1];
         std::string wtnsFilename = argv[2];

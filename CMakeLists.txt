@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.22.1)
 
 include(cmake/platform.cmake)
 
@@ -7,7 +7,7 @@ set(USE_OPENMP ON CACHE BOOL "Use OpenMP")
 
 project(rapidsnark LANGUAGES CXX ASM)
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 message("USE_ASM=" ${USE_ASM})

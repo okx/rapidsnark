@@ -1,18 +1,47 @@
 link_libraries(${GMP_LIB})
-
 add_definitions(${GMP_DEFINIONS})
+
+OPTION(USE_CUDA "whether integrate with gpu" OFF) # Enabled by default
+
+if(USE_CUDA)
+    message("USE CUDA")
+
+    add_definitions(-DUSE_CUDA)
+
+    if(NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
+        set(CMAKE_CUDA_ARCHITECTURES 70)
+    endif()
+
+    project(ffiasm LANGUAGES CXX CUDA ASM)
+    set(CMAKE_CXX_STANDARD 17)
+    find_package(CUDA REQUIRED)
+    enable_language("CUDA")
+    set(PROJECT_CUDA_SOURCE_DIR ${CMAKE_SOURCE_DIR}/depends/ffiasm/depends/cryptography_cuda/cuda)
+    include_directories(SYSTEM ${CUDA_INCLUDE_DIRS})
+    include_directories(${PROJECT_CUDA_SOURCE_DIR})
+    include_directories("../depends/ffiasm/depends/cryptography_cuda/depends/blst/src") # the cuda library is dependent on blst
+    set(LIB_SOURCES
+        ../depends/ffiasm/depends/cryptography_cuda/src/lib.h
+        ../depends/ffiasm/depends/cryptography_cuda/src/lib.cu
+        ../depends/ffiasm/depends/cryptography_cuda/cuda/util/all_gpus.cpp
+    )
+    add_library(cryptography_cuda STATIC ${LIB_SOURCES})
+
+    # # todo: pass feature as environment variable, or as option
+    target_compile_definitions(cryptography_cuda PUBLIC -DFEATURE_BN254 -D__ADX__)
+    target_link_libraries(cryptography_cuda /data/workspace/cliff/rapidsnark/depends/ffiasm/depends/cryptography_cuda/depends/blst/libblst.a)
+endif()
 
 if(USE_ASM)
     if(ARCH MATCHES "arm64")
-            add_definitions(-DUSE_ASM -DARCH_ARM64)
+        add_definitions(-DUSE_ASM -DARCH_ARM64)
     elseif(ARCH MATCHES "x86_64")
-            add_definitions(-DUSE_ASM -DARCH_X86_64)
+        add_definitions(-DUSE_ASM -DARCH_X86_64)
     endif()
 endif()
 
 if(USE_ASM AND ARCH MATCHES "x86_64")
-
-    if (CMAKE_HOST_SYSTEM_NAME MATCHES "Darwin")
+    if(CMAKE_HOST_SYSTEM_NAME MATCHES "Darwin")
         set(NASM_FLAGS -fmacho64 --prefix _)
     else()
         set(NASM_FLAGS -felf64 -DPIC)
@@ -32,7 +61,7 @@ endif()
 set(FR_SOURCES
     ../build/fr.hpp
     ../build/fr.cpp
-    )
+)
 
 if(USE_ASM)
     if(ARCH MATCHES "arm64")
@@ -52,7 +81,7 @@ link_libraries(fr)
 set(FQ_SOURCES
     ../build/fq.hpp
     ../build/fq.cpp
-    )
+)
 
 if(USE_ASM)
     if(ARCH MATCHES "arm64")
@@ -68,7 +97,6 @@ add_library(fq STATIC ${FQ_SOURCES})
 set_target_properties(fq PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 link_libraries(fq)
-
 
 if(OpenMP_CXX_FOUND)
     add_definitions(-DUSE_OPENMP)
@@ -92,7 +120,7 @@ set(LIB_SOURCES
     ../depends/ffiasm/c/naf.cpp
     ../depends/ffiasm/c/splitparstr.cpp
     ../depends/ffiasm/c/alt_bn128.cpp
-    )
+)
 
 if(USE_LOGGER)
     set(LIB_SOURCES ${LIB_SOURCES} logger.cpp)
@@ -113,7 +141,13 @@ set_target_properties(rapidsnarkStaticFrFq PROPERTIES POSITION_INDEPENDENT_CODE 
 set_target_properties(rapidsnarkStaticFrFq PROPERTIES OUTPUT_NAME rapidsnark-fr-fq)
 
 add_executable(prover main_prover.cpp)
+
+# target_include_directories(prover PUBLIC "/data/workspace/cliff/cryptography_cuda/depends/blst/src")
 target_link_libraries(prover rapidsnarkStatic)
+
+if(USE_CUDA)
+    target_link_libraries(prover cryptography_cuda)
+endif(USE_CUDA)
 
 add_library(rapidsnark SHARED ${LIB_SOURCES})
 
@@ -125,9 +159,7 @@ if(USE_SODIUM)
     target_link_libraries(prover sodium)
 endif()
 
-
 if(OpenMP_CXX_FOUND)
-
     if(TARGET_PLATFORM MATCHES "android")
         target_link_libraries(prover -static-openmp -fopenmp)
         target_link_libraries(rapidsnark -static-openmp -fopenmp)
@@ -135,8 +167,6 @@ if(OpenMP_CXX_FOUND)
     elseif(CMAKE_HOST_SYSTEM_NAME STREQUAL "Linux")
         target_link_libraries(prover OpenMP::OpenMP_CXX)
     endif()
-
 endif()
-
 
 add_executable(test_prover test_prover.cpp)

@@ -4,7 +4,7 @@
 #include <string>
 #include <nlohmann/json.hpp>
 using json = nlohmann::json;
-
+#include "logging.hpp"
 #include "fft.hpp"
 
 namespace Groth16 {
@@ -90,6 +90,7 @@ namespace Groth16 {
             pointsC(_pointsC),
             pointsH(_pointsH)
         { 
+            LOG_DEBUG(("new fft in prover constructor with domain size: "+ std::to_string(domainSize)).c_str());
             fft = new FFT<typename Engine::Fr>(domainSize*2);
         }
 
