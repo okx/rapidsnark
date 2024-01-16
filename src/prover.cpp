@@ -32,12 +32,14 @@ static void VerifyPrimes(mpz_srcptr zkey_prime, mpz_srcptr wtns_prime)
     mpz_init(altBbn128r);
     mpz_set_str(altBbn128r, "21888242871839275222246405745257275088548364400416034343698204186575808495617", 10);
 
-    if (mpz_cmp(zkey_prime, altBbn128r) != 0) {
-        throw std::invalid_argument( "zkey curve not supported" );
+    if (mpz_cmp(zkey_prime, altBbn128r) != 0)
+    {
+        throw std::invalid_argument("zkey curve not supported");
     }
 
-    if (mpz_cmp(wtns_prime, altBbn128r) != 0) {
-        throw std::invalid_argument( "different wtns curve" );
+    if (mpz_cmp(wtns_prime, altBbn128r) != 0)
+    {
+        throw std::invalid_argument("different wtns curve");
     }
 
     mpz_clear(altBbn128r);
@@ -47,7 +49,8 @@ std::string BuildPublicString(AltBn128::FrElement *wtnsData, size_t nPublic)
 {
     json jsonPublic;
     AltBn128::FrElement aux;
-    for (u_int32_t i=1; i<= nPublic; i++) {
+    for (u_int32_t i = 1; i <= nPublic; i++)
+    {
         AltBn128::Fr.toMontgomery(aux, wtnsData[i]);
         jsonPublic.push_back(AltBn128::Fr.toString(aux));
     }
@@ -55,26 +58,30 @@ std::string BuildPublicString(AltBn128::FrElement *wtnsData, size_t nPublic)
     return jsonPublic.dump();
 }
 
-int
-groth16_prover(const void *zkey_buffer,   unsigned long  zkey_size,
-               const void *wtns_buffer,   unsigned long  wtns_size,
-               char       *proof_buffer,  unsigned long *proof_size,
-               char       *public_buffer, unsigned long *public_size,
-               char       *error_msg,     unsigned long  error_msg_maxsize)
+int groth16_prover(const void *zkey_buffer, unsigned long zkey_size,
+                   const void *wtns_buffer, unsigned long wtns_size,
+                   char *proof_buffer, unsigned long *proof_size,
+                   char *public_buffer, unsigned long *public_size,
+                   char *error_msg, unsigned long error_msg_maxsize)
 {
-    try {
+    try
+    {
+        double start, end;
+        double cpu_time_used;
+        start = omp_get_wtime();
         BinFileUtils::BinFile zkey(zkey_buffer, zkey_size, "zkey", 1);
         auto zkeyHeader = ZKeyUtils::loadHeader(&zkey);
 
         BinFileUtils::BinFile wtns(wtns_buffer, wtns_size, "wtns", 2);
         auto wtnsHeader = WtnsUtils::loadHeader(&wtns);
 
-        size_t proofMinSize  = ProofBufferMinSize();
+        size_t proofMinSize = ProofBufferMinSize();
         size_t publicMinSize = PublicBufferMinSize(zkeyHeader->nPublic);
 
-        if (*proof_size < proofMinSize || *public_size < publicMinSize) {
+        if (*proof_size < proofMinSize || *public_size < publicMinSize)
+        {
 
-            *proof_size  = proofMinSize;
+            *proof_size = proofMinSize;
             *public_size = publicMinSize;
 
             return PPROVER_ERROR_SHORT_BUFFER;
@@ -92,25 +99,31 @@ groth16_prover(const void *zkey_buffer,   unsigned long  zkey_size,
             zkeyHeader->vk_beta2,
             zkeyHeader->vk_delta1,
             zkeyHeader->vk_delta2,
-            zkey.getSectionData(4),    // Coefs
-            zkey.getSectionData(5),    // pointsA
-            zkey.getSectionData(6),    // pointsB1
-            zkey.getSectionData(7),    // pointsB2
-            zkey.getSectionData(8),    // pointsC
-            zkey.getSectionData(9)     // pointsH1
+            zkey.getSectionData(4), // Coefs
+            zkey.getSectionData(5), // pointsA
+            zkey.getSectionData(6), // pointsB1
+            zkey.getSectionData(7), // pointsB2
+            zkey.getSectionData(8), // pointsC
+            zkey.getSectionData(9)  // pointsH1
         );
+        end = omp_get_wtime();
+        cpu_time_used = ((double)(end - start));
+        // char *str;
+        printf("time used zkey file laoding (ms): %.3lf\n", cpu_time_used * 1000);
+        // LOG_DEBUG(str);
         AltBn128::FrElement *wtnsData = (AltBn128::FrElement *)wtns.getSectionData(2);
         auto proof = prover->prove(wtnsData);
 
         std::string stringProof = proof->toJson().dump();
         std::string stringPublic = BuildPublicString(wtnsData, zkeyHeader->nPublic);
 
-        size_t stringProofSize  = stringProof.length();
+        size_t stringProofSize = stringProof.length();
         size_t stringPublicSize = stringPublic.length();
 
-        if (*proof_size < stringProofSize || *public_size < stringPublicSize) {
+        if (*proof_size < stringProofSize || *public_size < stringPublicSize)
+        {
 
-            *proof_size  = stringProofSize;
+            *proof_size = stringProofSize;
             *public_size = stringPublicSize;
 
             return PPROVER_ERROR_SHORT_BUFFER;
@@ -118,24 +131,30 @@ groth16_prover(const void *zkey_buffer,   unsigned long  zkey_size,
 
         std::strncpy(proof_buffer, stringProof.data(), *proof_size);
         std::strncpy(public_buffer, stringPublic.data(), *public_size);
+    }
+    catch (std::exception &e)
+    {
 
-    } catch (std::exception& e) {
-
-        if (error_msg) {
+        if (error_msg)
+        {
             strncpy(error_msg, e.what(), error_msg_maxsize);
         }
         return PPROVER_ERROR;
+    }
+    catch (std::exception *e)
+    {
 
-    } catch (std::exception *e) {
-
-        if (error_msg) {
+        if (error_msg)
+        {
             strncpy(error_msg, e->what(), error_msg_maxsize);
         }
         delete e;
         return PPROVER_ERROR;
-
-    } catch (...) {
-        if (error_msg) {
+    }
+    catch (...)
+    {
+        if (error_msg)
+        {
             strncpy(error_msg, "unknown error", error_msg_maxsize);
         }
         return PPROVER_ERROR;

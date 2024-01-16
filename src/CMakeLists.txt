@@ -8,14 +8,32 @@ if(USE_CUDA)
 
     add_definitions(-DUSE_CUDA)
 
+    # if(${CMAKE_VERSION} VERSION_LESS "3.24.0")
+    #     set(CMAKE_CUDA_ARCHITECTURES ${CUDA_ARCH})
+    # else()
+    #     set(CMAKE_CUDA_ARCHITECTURES native) # on 3.24+, on earlier it is ignored, and the target is not passed
+    # endif()
+
     if(NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
         set(CMAKE_CUDA_ARCHITECTURES 70)
     endif()
 
     project(ffiasm LANGUAGES CXX CUDA ASM)
-    set(CMAKE_CXX_STANDARD 17)
     find_package(CUDA REQUIRED)
     enable_language("CUDA")
+
+    if(CMAKE_BUILD_TYPE STREQUAL "Release")
+        message("Build on Release Mode")
+        set(CMAKE_CUDA_FLAGS_RELEASE "") # without this setting, the msm_g2 will panic with memory segmentation, should separate this fore G1 and G2
+    else()
+        message("Build on Debug Mode")
+        set(CMAKE_CUDA_FLAGS_DEBUG "${CMAKE_CUDA_FLAGS_DEBUG} -g -G -O0")
+    endif()
+
+    # set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --expt-relaxed-constexpr")
+
+    # set(CUDA_SEPARABLE_COMPILATION ON)
+
     set(PROJECT_CUDA_SOURCE_DIR ${CMAKE_SOURCE_DIR}/depends/ffiasm/depends/cryptography_cuda/cuda)
     include_directories(SYSTEM ${CUDA_INCLUDE_DIRS})
     include_directories(${PROJECT_CUDA_SOURCE_DIR})
@@ -28,7 +46,7 @@ if(USE_CUDA)
     add_library(cryptography_cuda STATIC ${LIB_SOURCES})
 
     # # todo: pass feature as environment variable, or as option
-    target_compile_definitions(cryptography_cuda PUBLIC -DFEATURE_BN254 -D__ADX__)
+    target_compile_definitions(cryptography_cuda PUBLIC -DFEATURE_BN254 -DG2_ENABLED -D__ADX__)
     target_link_libraries(cryptography_cuda /data/workspace/cliff/rapidsnark/depends/ffiasm/depends/cryptography_cuda/depends/blst/libblst.a)
 endif()
 
@@ -141,8 +159,8 @@ set_target_properties(rapidsnarkStaticFrFq PROPERTIES POSITION_INDEPENDENT_CODE 
 set_target_properties(rapidsnarkStaticFrFq PROPERTIES OUTPUT_NAME rapidsnark-fr-fq)
 
 add_executable(prover main_prover.cpp)
-
-# target_include_directories(prover PUBLIC "/data/workspace/cliff/cryptography_cuda/depends/blst/src")
+target_compile_definitions(prover PUBLIC -DFEATURE_BN254 -DG2_ENABLED)
+# target_include_directories(prover PUBLIC "/data/workspace/cliff/cryptography_cuda/src")
 target_link_libraries(prover rapidsnarkStatic)
 
 if(USE_CUDA)
@@ -160,11 +178,7 @@ if(USE_SODIUM)
 endif()
 
 if(OpenMP_CXX_FOUND)
-    if(TARGET_PLATFORM MATCHES "android")
-        target_link_libraries(prover -static-openmp -fopenmp)
-        target_link_libraries(rapidsnark -static-openmp -fopenmp)
-
-    elseif(CMAKE_HOST_SYSTEM_NAME STREQUAL "Linux")
+    if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Linux")
         target_link_libraries(prover OpenMP::OpenMP_CXX)
     endif()
 endif()

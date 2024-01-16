@@ -52,7 +52,7 @@ git submodule init
 git submodule update
 ./build_gmp.sh host
 mkdir build_prover && cd build_prover
-cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=../package -DUSE_LOGGER=ON -DUSE_CUDA=ON
+cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=../package -DUSE_LOGGER=ON -DG2_ENABLED=ON -DUSE_CUDA=ON
 make -j4 && make install
 ```
 
