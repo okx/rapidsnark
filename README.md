@@ -23,13 +23,14 @@ npm install
 git submodule init
 git submodule update
 npm run task buildPistache
+npm run task createFieldSources
 npm run task buildProverServer
 ```
 
 ## Launch prover in server mode
 ```sh
 export LD_LIBRARY_PATH=depends/pistache/build/src
-./build/proverServer  <port> <circuit1_zkey> <circuit2_zkey> ... <circuitN_zkey>
+./build_nodejs/proverServer  <port> <circuit1_zkey> <circuit2_zkey> ... <circuitN_zkey>
 ```
 
 For every `circuit.circom` you have to generate with circom with --c option the `circuit_cpp` and after compilation you have to copy the executable into the `build` folder so the server can generate the witness and then the proof based on this witness.
