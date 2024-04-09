@@ -23,13 +23,14 @@ npm install
 git submodule init
 git submodule update
 npm run task buildPistache
+npm run task createFieldSources
 npm run task buildProverServer
 ```
 
 ## Launch prover in server mode
 ```sh
 export LD_LIBRARY_PATH=depends/pistache/build/src
-./build/proverServer  <port> <circuit1_zkey> <circuit2_zkey> ... <circuitN_zkey>
+./build_nodejs/proverServer  <port> <circuit1_zkey> <circuit2_zkey> ... <circuitN_zkey>
 ```
 
 For every `circuit.circom` you have to generate with circom with --c option the `circuit_cpp` and after compilation you have to copy the executable into the `build` folder so the server can generate the witness and then the proof based on this witness.
@@ -45,15 +46,25 @@ node tools/request.js <input.json> <circuit>
 
 ### using cmake
 the `CMakeLists.txt` int the root folder includes `cmake/platform.cmake` which setup the environment for `GMP`
+
 #### Compile prover for x86_64 host machine
 
 ```sh
-git submodule init
-git submodule update
+git submodule update --init
 ./build_gmp.sh host
-mkdir build_prover && cd build_prover
-cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=../package -DUSE_LOGGER=ON -DG2_ENABLED=ON -DUSE_CUDA=ON
-make -j4 && make install
+make host
+```
+
+#### Compile standalone + GPU
+
+```sh
+git submodule update --init --recursive
+./build_gmp.sh host
+# build libblst.a manually
+cd ./depends/ffiasm/depends/cryptography_cuda/depends/blst/
+./build.sh
+# cd back to rapidsnark
+make host-gpu
 ```
 
 #### Compile prover for macOS arm64 host machine
