@@ -23,13 +23,14 @@ npm install
 git submodule init
 git submodule update
 npm run task buildPistache
+npm run task createFieldSources
 npm run task buildProverServer
 ```
 
 ## Launch prover in server mode
 ```sh
 export LD_LIBRARY_PATH=depends/pistache/build/src
-./build/proverServer  <port> <circuit1_zkey> <circuit2_zkey> ... <circuitN_zkey>
+./build_nodejs/proverServer  <port> <circuit1_zkey> <circuit2_zkey> ... <circuitN_zkey>
 ```
 
 For every `circuit.circom` you have to generate with circom with --c option the `circuit_cpp` and after compilation you have to copy the executable into the `build` folder so the server can generate the witness and then the proof based on this witness.
@@ -52,7 +53,7 @@ git submodule init
 git submodule update
 ./build_gmp.sh host
 mkdir build_prover && cd build_prover
-cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=../package
+cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=../package -DUSE_LOGGER=ON -DG2_ENABLED=ON -DUSE_CUDA=ON
 make -j4 && make install
 ```
 
@@ -63,7 +64,7 @@ git submodule init
 git submodule update
 ./build_gmp.sh macos_arm64
 mkdir build_prover_macos_arm64 && cd build_prover_macos_arm64
-cmake .. -DTARGET_PLATFORM=macos_arm64 -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=../package_macos_arm64
+cmake .. -DTARGET_PLATFORM=macos_arm64 -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=../package -DUSE_LOGGER=ON
 make -j4 && make install
 ```
 
@@ -185,3 +186,9 @@ The prover is much faster that snarkjs and faster than bellman.
 ## License
 
 rapidsnark is part of the iden3 project copyright 2021 0KIMS association and published with GPL-3 license. Please check the COPYING file for more details.
+
+
+
+## dependencies
+- ffiasm: master
+- cryptography_cuda: dev
