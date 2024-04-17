@@ -1,11 +1,17 @@
 const fs = require("fs");
 const fetch = require('node-fetch');
 
+// If not enough arguments, print usage
+if (process.argv.length < 3) {
+    console.log("Usage: node request.js <input file> <circuit> [Optional: port]");
+}
 const input = fs.readFileSync(process.argv[2], "utf8");
 const circuit = process.argv[3];
+// If get the port from the command line, use it, otherwise use the default port
+const port = process.argv[4] || 9080;
 
 async function callInput() {
-    const rawResponse = await fetch(`http://localhost:9080/input/${circuit}`, {
+    const rawResponse = await fetch(`http://localhost:${port}/input/${circuit}`, {
       method: 'POST',
       headers: {
         'Accept': 'application/json',
@@ -22,7 +28,7 @@ async function callInput() {
 
 
 async function getStatus() {
-    const rawResponse = await fetch('http://localhost:9080/status', {
+    const rawResponse = await fetch(`http://localhost:${port}/status`, {
         method: 'GET',
         headers: {
             'Accept': 'application/json'
