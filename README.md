@@ -1,4 +1,4 @@
-## Important note 
+## Important note
 
 **This is a new implementation of rapidsnark. The original (and now obsoleted) implemenation is available here: [rapidsnark-old](https://github.com/iden3/rapidsnark-old).**
 
@@ -25,6 +25,8 @@ git submodule update
 npm run task buildPistache
 npm run task createFieldSources
 npm run task buildProverServer
+# Single Thread, for testing purposes
+npm run task buildProverServerSingleThread
 ```
 
 ## Launch prover in server mode
