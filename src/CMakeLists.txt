@@ -47,7 +47,7 @@ if(USE_CUDA)
 
     # # todo: pass feature as environment variable, or as option
     target_compile_definitions(cryptography_cuda PUBLIC -DFEATURE_BN254 -DG2_ENABLED -D__ADX__)
-    target_link_libraries(cryptography_cuda /data/workspace/cliff/rapidsnark/depends/ffiasm/depends/cryptography_cuda/depends/blst/libblst.a)
+    target_link_libraries(cryptography_cuda ${CMAKE_SOURCE_DIR}/depends/ffiasm/depends/cryptography_cuda/depends/blst/libblst.a)
 endif()
 
 if(USE_ASM)

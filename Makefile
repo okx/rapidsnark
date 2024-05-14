@@ -3,7 +3,12 @@
 #Build targets
 host:
 	rm -rf build_prover && mkdir build_prover && cd build_prover && \
-	cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=../package && \
+	cmake .. -DUSE_CUDA=OFF -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=../package -DUSE_LOGGER=ON -DG2_ENABLED=ON && \
+	make -j$(nproc) -vvv && make install
+
+host-gpu:
+	rm -rf build_prover_gpu && mkdir build_prover_gpu && cd build_prover_gpu && \
+	cmake .. -DUSE_CUDA=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=../package -DUSE_LOGGER=ON -DG2_ENABLED=ON && \
 	make -j$(nproc) -vvv && make install
 
 android:
