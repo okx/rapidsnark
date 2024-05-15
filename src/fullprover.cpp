@@ -143,6 +143,16 @@ void FullProver::thread_calculateProve() {
         }
 
         AltBn128::FrElement *wtnsData = (AltBn128::FrElement *)wtns->getSectionData(2);
+              
+        std::string stringPublic = BuildPublicString(wtnsData, zkeyHeader->nPublic);
+        size_t stringPublicSize = stringPublic.length();
+        char publicBuffer[stringPublicSize.length()];
+        std::strncpy(publicBuffer, stringPublic.data(), sizeof(publicBuffer));
+
+        std::ofstream publicFile;
+        publicFile.open("./build/public.json");
+        publicFile << publicBuffer;
+        publicFile.close();
 
         pubData.clear();
         AltBn128::FrElement aux;
