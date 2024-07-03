@@ -74,10 +74,19 @@ make host-gpu
 ```sh
 git submodule init
 git submodule update
-./build_gmp.sh macos_arm64
-mkdir build_prover_macos_arm64 && cd build_prover_macos_arm64
-cmake .. -DTARGET_PLATFORM=macos_arm64 -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=../package -DUSE_LOGGER=ON
+# ./build_gmp.sh macos_arm64 # this will produce some output files not whitlisted as per company policy
+brew install gmp # install dependencies
+brew install libomp
+mkdir -p build_prover_macos_arm64 && cd build_prover_macos_arm64
+cmake .. -DTARGET_PLATFORM=macos_arm64 -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=../package -DUSE_LOGGER=ON  -DGMP_INCLUDE_DIR=/opt/homebrew/include -DGMP_LIB_DIR=/opt/homebrew/lib
 make -j4 && make install
+```
+
+if want to also build proverServer
+```sh
+npx task buildPistacheMac
+cmake .. -DTARGET_PLATFORM=macos_arm64 -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=../package -DUSE_LOGGER=ON  -DGMP_INCLUDE_DIR=/opt/homebrew/include -DGMP_LIB_DIR=/opt/homebrew/lib -DBUILD_SERVER=ON
+make -j4
 ```
 
 #### Compile prover for linux arm64 host machine

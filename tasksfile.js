@@ -30,6 +30,12 @@ function buildPistache() {
     sh("make", {cwd: "depends/pistache/build"});
 }
 
+function buildPistacheMac() {
+    sh("mkdir -p build", {cwd: "depends/pistache"});
+    sh("cmake -DCMAKE_BUILD_TYPE=Release -DPISTACHE_BUILD_TESTS=OFF -DLIB_EVENT_INCLUDE_DIR=/opt/homebrew/opt/libevent/include ..", {cwd: "depends/pistache/build"});
+    sh("make", {cwd: "depends/pistache/build"});
+}
+
 function buildProverServer() {
     sh("g++" +
         " -I."+
@@ -55,7 +61,7 @@ function buildProverServer() {
         " fr.o"+
         " -L../depends/pistache/build/src -lpistache"+
         " -o proverServer"+
-        " -fmax-errors=5 -std=c++17 -DUSE_OPENMP -DUSE_ASM -DARCH_X86_64 -DUSE_LOGGER -pthread -lgmp -lsodium -fopenmp -O3", {cwd: "build_nodejs", nopipe: true}
+        " -fmax-errors=5 -std=c++17 -DUSE_OPENMP -DUSE_ASM -DARCH_X86_64 -DUSE_LOGGER -pthread -lgmp -lsodium -fopenmp -O3", {cwd: "build", nopipe: true}
     );
 }
 
@@ -121,6 +127,7 @@ cli({
     cleanAll,
     createFieldSources,
     buildPistache,
+    buildPistacheMac,
     buildProverServer,
     buildProver,
     buildProverServerSingleThread
