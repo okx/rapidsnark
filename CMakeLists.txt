@@ -44,8 +44,8 @@ endif()
 
 
 include_directories(BEFORE ${GMP_INCLUDE_DIR})
-include_directories(/opt/homebrew/opt/libomp/include)
-link_libraries(/opt/homebrew/opt/libomp/lib/libomp.dylib)
+include_directories(${LIB_OMP_PREFIX}/include)
+link_libraries(${LIB_OMP_PREFIX}/lib/libomp.dylib)
 
 if(USE_OPENMP)
     set(OpenMP_C "${CMAKE_C_COMPILER}" CACHE STRING "" FORCE)

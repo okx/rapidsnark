@@ -85,8 +85,10 @@ make -j4 && make install
 if want to also build proverServer
 ```sh
 npx task buildPistacheMac
-cmake .. -DTARGET_PLATFORM=macos_arm64 -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=../package -DUSE_LOGGER=ON  -DGMP_INCLUDE_DIR=/opt/homebrew/include -DGMP_LIB_DIR=/opt/homebrew/lib -DBUILD_SERVER=ON
+cmake .. -DTARGET_PLATFORM=macos_arm64 -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=../package -DUSE_LOGGER=ON  -DGMP_INCLUDE_DIR=/opt/homebrew/include -DGMP_LIB_DIR=/opt/homebrew/lib -DLIB_OMP_PREFIX=/opt/homebrew/opt/libomp -DBUILD_SERVER=ON -DLIB_EVENT_DIR=/opt/homebrew/opt/libevent/lib
 make -j4
+cp ./src/proverServer ../build/
+./build/proverServer 3000 ${path_to_zkey_file} ## must run under build dir as the cpp source code is hardcoded
 ```
 
 #### Compile prover for linux arm64 host machine

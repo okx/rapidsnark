@@ -196,5 +196,5 @@ include_directories(../depends/pistache/build/src)
 target_link_libraries(proverServer rapidsnarkStatic)
 
 link_directories(../depends/pistache/build/src)
-target_link_libraries(proverServer ${CMAKE_SOURCE_DIR}/depends/pistache/build/src/libpistache.dylib)
+target_link_libraries(proverServer ${CMAKE_SOURCE_DIR}/depends/pistache/build/src/libpistache.dylib ${LIB_EVENT_DIR}/libevent.dylib ${LIB_EVENT_DIR}/libevent_pthreads.dylib)
 endif()

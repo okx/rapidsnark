@@ -32,7 +32,7 @@ function buildPistache() {
 
 function buildPistacheMac() {
     sh("mkdir -p build", {cwd: "depends/pistache"});
-    sh("cmake -DCMAKE_BUILD_TYPE=Release -DPISTACHE_BUILD_TESTS=OFF -DLIB_EVENT_INCLUDE_DIR=/opt/homebrew/opt/libevent/include ..", {cwd: "depends/pistache/build"});
+    sh("cmake -G \"Unix Makefiles\" -DCMAKE_BUILD_TYPE=Release -DPISTACHE_BUILD_TESTS=OFF -DLIB_EVENT_INCLUDE_DIR=/opt/homebrew/opt/libevent/include ..", {cwd: "depends/pistache/build"});
     sh("make", {cwd: "depends/pistache/build"});
 }
 
