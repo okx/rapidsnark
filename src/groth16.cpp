@@ -22,9 +22,9 @@ namespace Groth16
                 // AltBn128::Engine::engine.g1.multiMulByScalar(r, bases, scalars, sizePoint, n);
 
                 point_t *gpu_result = new point_t{};
-                double start_g1 = omp_get_wtime();
+                // double start_g1 = omp_get_wtime();
                 mult_pippenger(gpu_result, (affine_t *)bases, n, (fr_t *)scalars, sizePoint);
-                g1_msm += ((double)(omp_get_wtime() - start_g1));
+                // g1_msm += ((double)(omp_get_wtime() - start_g1));
                 LOG_DEBUG("wait gpu result");
                 F1Element *gpu_x = (F1Element *)(&gpu_result->X);
                 F1Element *gpu_y = (F1Element *)(&gpu_result->Y);
@@ -71,11 +71,11 @@ namespace Groth16
                 size_t msm_size = n;
 
                 g2_projective_t *gpu_result_projective = (g2_projective_t *)malloc(sizeof(g2_projective_t));
-                double start_g2 = omp_get_wtime();
+                // double start_g2 = omp_get_wtime();
                 LOG_DEBUG("start invoking g2");
                 mult_pippenger_g2(gpu_result_projective, points, msm_size, scalars_gpu, 10, false, false);
                 LOG_DEBUG("end invoking g2");
-                g2_msm += ((double)(omp_get_wtime() - start_g2));
+                // g2_msm += ((double)(omp_get_wtime() - start_g2));
                 g2_affine_t gpu_result_affine = g2_projective_t::to_affine(*gpu_result_projective);
                 G2PointAffine gpu_result_affine_in_host_format;
                 F1.fromRprLE(gpu_result_affine_in_host_format.x.a, (uint8_t *)(gpu_result_affine.x.real.export_limbs()), 32);
@@ -142,9 +142,9 @@ namespace Groth16
                 g1MultiMulByScalarGpu(pi_a, pointsA, (uint8_t *)wtns, sizeof(affine_t), nVars);
 #else
 
-                double start0 = omp_get_wtime();
+                // double start0 = omp_get_wtime();
                 E.g1.multiMulByScalar(pi_a, pointsA, (uint8_t *)wtns, sW, nVars);
-                g1_msm += ((double)(omp_get_wtime() - start0));
+                // g1_msm += ((double)(omp_get_wtime() - start0));
 #endif
                 std::ostringstream ss2;
                 ss2 << "pi_a: " << E.g1.toString(pi_a);
@@ -155,9 +155,9 @@ namespace Groth16
 #if defined(USE_CUDA)
                 g1MultiMulByScalarGpu(pib1, pointsB1, (uint8_t *)wtns, sizeof(affine_t), nVars);
 #else
-                double start1 = omp_get_wtime();
+                // double start1 = omp_get_wtime();
                 E.g1.multiMulByScalar(pib1, pointsB1, (uint8_t *)wtns, sW, nVars);
-                g1_msm += ((double)(omp_get_wtime() - start1));
+                // g1_msm += ((double)(omp_get_wtime() - start1));
 #endif
 
                 std::ostringstream ss3;
@@ -170,9 +170,9 @@ namespace Groth16
                 g2MultiMulByScalarGpu(pi_b, pointsB2, (scalar_field_t *)wtns, nVars);
 
 #else
-                double start_g2_b = omp_get_wtime();
+                // double start_g2_b = omp_get_wtime();
                 E.g2.multiMulByScalar(pi_b, pointsB2, (uint8_t *)wtns, sW, nVars);
-                g2_msm += ((double)(omp_get_wtime() - start_g2_b));
+                // g2_msm += ((double)(omp_get_wtime() - start_g2_b));
 #endif
                 std::ostringstream ss4;
                 ss4 << "pi_b: " << E.g2.toString(pi_b);
@@ -183,9 +183,9 @@ namespace Groth16
 #if defined(USE_CUDA)
                 g1MultiMulByScalarGpu(pi_c, pointsC, (uint8_t *)((uint64_t)wtns + (nPublic + 1) * sW), sizeof(affine_t), nVars - nPublic - 1);
 #else
-                double start_g1_c = omp_get_wtime();
+                // double start_g1_c = omp_get_wtime();
                 E.g1.multiMulByScalar(pi_c, pointsC, (uint8_t *)((uint64_t)wtns + (nPublic + 1) * sW), sW, nVars - nPublic - 1);
-                g1_msm += ((double)(omp_get_wtime() - start_g1_c));
+                // g1_msm += ((double)(omp_get_wtime() - start_g1_c));
 #endif
                 std::ostringstream ss5;
                 ss5 << "pi_c: " << E.g1.toString(pi_c);
@@ -374,9 +374,9 @@ namespace Groth16
 #if defined(USE_CUDA)
                 g1MultiMulByScalarGpu(pih, pointsH, (uint8_t *)a, sizeof(affine_t), domainSize);
 #else
-                double start_g1_h = omp_get_wtime();
+                // double start_g1_h = omp_get_wtime();
                 E.g1.multiMulByScalar(pih, pointsH, (uint8_t *)a, sizeof(a[0]), domainSize);
-                g1_msm += ((double)(omp_get_wtime() - start_g1_h));
+                // g1_msm += ((double)(omp_get_wtime() - start_g1_h));
 #endif
                 std::ostringstream ss1;
                 ss1 << "pih: " << E.g1.toString(pih);
@@ -434,8 +434,8 @@ namespace Groth16
                 E.g1.copy(p->A, pi_a);
                 E.g2.copy(p->B, pi_b);
                 E.g1.copy(p->C, pi_c);
-                printf("time used msm g1 (ms): %.3lf\n", g1_msm * 1000);
-                printf("time used msm g2 (ms): %.3lf\n", g2_msm * 1000);
+                // printf("time used msm g1 (ms): %.3lf\n", g1_msm * 1000);
+                // printf("time used msm g2 (ms): %.3lf\n", g2_msm * 1000);
                 return std::unique_ptr<Proof<Engine>>(p);
         }
 
