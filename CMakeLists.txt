@@ -44,7 +44,8 @@ endif()
 
 
 include_directories(BEFORE ${GMP_INCLUDE_DIR})
-
+include_directories(/opt/homebrew/opt/libomp/include)
+link_libraries(/opt/homebrew/opt/libomp/lib/libomp.dylib)
 
 if(USE_OPENMP)
     set(OpenMP_C "${CMAKE_C_COMPILER}" CACHE STRING "" FORCE)
@@ -56,7 +57,7 @@ if(USE_OPENMP)
 
 
     set(OpenMP_CXX "${CMAKE_CXX_COMPILER}" CACHE STRING "" FORCE)
-    set(OpenMP_CXX_FLAGS "-Xpreprocessor" CACHE STRING "" FORCE) # -fopenmp /opt/homebrew/opt/libomp/lib/libomp.dylib -I/opt/homebrew/opt/libomp/include
+    set(OpenMP_CXX_FLAGS "-Xpreprocessor -fopenmp" CACHE STRING "" FORCE) # -fopenmp /opt/homebrew/opt/libomp/lib/libomp.dylib -I/opt/homebrew/opt/libomp/include
     set(OpenMP_CXX_LIB_NAMES "libomp" "libgomp" "libiomp5" CACHE STRING "" FORCE)
     set(OpenMP_libomp_LIBRARY ${OpenMP_CXX_LIB_NAMES} CACHE STRING "" FORCE)
     set(OpenMP_libgomp_LIBRARY ${OpenMP_CXX_LIB_NAMES} CACHE STRING "" FORCE)
