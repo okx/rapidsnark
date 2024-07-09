@@ -1,20 +1,27 @@
 cmake_minimum_required(VERSION 3.22.1)
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CUDA_STANDARD 17)
-set(CMAKE_CUDA_STANDARD_REQUIRED TRUE)
+if(USE_CUDA)
+    set(CMAKE_CUDA_STANDARD 17)
+    set(CMAKE_CUDA_STANDARD_REQUIRED TRUE)
+endif()
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 
 include(cmake/platform.cmake)
 
 set(USE_ASM    ON CACHE BOOL "Use asm implementation for Fr and Fq")
 set(USE_OPENMP ON CACHE BOOL "Use OpenMP")
+set(BUILD_SERVER OFF CACHE BOOL "Use OpenMP")
 set(G2_ENABLED OFF CACHE BOOL "enable G2 curve")
 
 if(G2_ENABLED)
     add_definitions(-DG2_ENABLED)
 endif()
 
-project(rapidsnark LANGUAGES CXX CUDA ASM)
+if(USE_CUDA)
+    project(rapidsnark LANGUAGES CXX CUDA ASM)
+else()
+    project(rapidsnark LANGUAGES CXX ASM)
+endif()
 
 
 
@@ -37,10 +44,25 @@ endif()
 
 
 include_directories(BEFORE ${GMP_INCLUDE_DIR})
-
+include_directories(${LIB_OMP_PREFIX}/include)
+link_libraries(${LIB_OMP_PREFIX}/lib/libomp.dylib)
 
 if(USE_OPENMP)
-    find_package(OpenMP)
+    set(OpenMP_C "${CMAKE_C_COMPILER}" CACHE STRING "" FORCE)
+    set(OpenMP_C_FLAGS "-fopenmp -Wno-unused-command-line-argument" CACHE STRING "" FORCE)
+    set(OpenMP_C_LIB_NAMES "libomp" "libgomp" "libiomp5" CACHE STRING "" FORCE)
+    set(OpenMP_libomp_LIBRARY ${OpenMP_C_LIB_NAMES} CACHE STRING "" FORCE)
+    set(OpenMP_libgomp_LIBRARY ${OpenMP_C_LIB_NAMES} CACHE STRING "" FORCE)
+    set(OpenMP_libiomp5_LIBRARY ${OpenMP_C_LIB_NAMES} CACHE STRING "" FORCE)
+
+
+    set(OpenMP_CXX "${CMAKE_CXX_COMPILER}" CACHE STRING "" FORCE)
+    set(OpenMP_CXX_FLAGS "-Xpreprocessor -fopenmp" CACHE STRING "" FORCE) # -fopenmp /opt/homebrew/opt/libomp/lib/libomp.dylib -I/opt/homebrew/opt/libomp/include
+    set(OpenMP_CXX_LIB_NAMES "libomp" "libgomp" "libiomp5" CACHE STRING "" FORCE)
+    set(OpenMP_libomp_LIBRARY ${OpenMP_CXX_LIB_NAMES} CACHE STRING "" FORCE)
+    set(OpenMP_libgomp_LIBRARY ${OpenMP_CXX_LIB_NAMES} CACHE STRING "" FORCE)
+    set(OpenMP_libiomp5_LIBRARY ${OpenMP_CXX_LIB_NAMES} CACHE STRING "" FORCE)
+    find_package(OpenMP REQUIRED)
 
     if(OpenMP_CXX_FOUND)
         if(TARGET_PLATFORM MATCHES "android")
@@ -50,7 +72,7 @@ if(USE_OPENMP)
             message("OpenMP is used")
 
         else()
-            set(OpenMP_CXX_FOUND FALSE)
+            set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
             message("OpenMP is not used")
 
         endif()

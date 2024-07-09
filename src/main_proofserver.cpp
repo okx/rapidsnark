@@ -24,13 +24,13 @@ int main(int argc, char **argv) {
     for (int i = 0; i < argc - 2; i++) {
         zkeyFileNames[i] = argv[i + 2];
     }
-
     FullProver fullProver(zkeyFileNames, argc - 2);
     ProverAPI proverAPI(fullProver);
     Address addr(Ipv4::any(), Port(port));
-
     auto opts = Http::Endpoint::options().threads(1).maxRequestSize(128000000);
+    LOG_INFO("start http server");
     Http::Endpoint server(addr);
+    LOG_INFO("start server init...");
     server.init(opts);
     Router router;
     Routes::Get(router, "/status", Routes::bind(&ProverAPI::getStatus, &proverAPI));

@@ -1,6 +1,10 @@
 link_libraries(${GMP_LIB})
 add_definitions(${GMP_DEFINIONS})
 
+
+message("SRC GMP_LIB_DIR=" ${GMP_LIB_DIR})
+message("CMAKE_SOURCE_DIR=" ${CMAKE_SOURCE_DIR})
+
 OPTION(USE_CUDA "whether integrate with gpu" OFF) # Enabled by default
 
 if(USE_CUDA)
@@ -184,3 +188,13 @@ if(OpenMP_CXX_FOUND)
 endif()
 
 add_executable(test_prover test_prover.cpp)
+
+if(BUILD_SERVER)
+add_executable(proverServer main_proofserver.cpp proverapi.cpp fullprover.cpp)
+include_directories(../depends/pistache/include/)
+include_directories(../depends/pistache/build/src)
+target_link_libraries(proverServer rapidsnarkStatic)
+
+link_directories(../depends/pistache/build/src)
+target_link_libraries(proverServer ${CMAKE_SOURCE_DIR}/depends/pistache/build/src/libpistache.dylib ${LIB_EVENT_DIR}/libevent.dylib ${LIB_EVENT_DIR}/libevent_pthreads.dylib)
+endif()
