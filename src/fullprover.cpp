@@ -126,11 +126,9 @@ void FullProver::thread_calculateProve() {
             std::cerr << "Couldn't start command." << std::endl;
         }
         while (fgets(buffer.data(), 128, pipe) != NULL) {
-            // std::cout << "Reading..." << std::endl;
             result += buffer.data();
         }
         auto returnCode = pclose(pipe);
-
         std::cout << result << std::endl;
         std::cout << returnCode << std::endl;
         

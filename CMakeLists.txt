@@ -24,7 +24,7 @@ else()
 endif()
 
 
-
+message("TARGET_PLATFORM=" ${TARGET_PLATFORM})
 message("USE_ASM=" ${USE_ASM})
 message("USE_OPENMP=" ${USE_OPENMP})
 message("CMAKE_CROSSCOMPILING=" ${CMAKE_CROSSCOMPILING})
@@ -32,6 +32,8 @@ message("CMAKE_CROSSCOMPILING=" ${CMAKE_CROSSCOMPILING})
 message("GMP_PREFIX=" ${GMP_PREFIX})
 message("GMP_INCLUDE_DIR=" ${GMP_INCLUDE_DIR})
 message("GMP_LIB_DIR=" ${GMP_LIB_DIR})
+
+message("LIB_OMP_PREFIX=" ${LIB_OMP_PREFIX})
 
 if (NOT EXISTS ${GMP_INCLUDE_FILE_FULLPATH})
     message("WARNING: ${GMP_INCLUDE_FILE_FULLPATH} is not found and so system ${GMP_INCLUDE_FILE} is used.")
@@ -70,6 +72,7 @@ if(USE_OPENMP)
 
         elseif(CMAKE_HOST_SYSTEM_NAME STREQUAL "Linux")
             message("OpenMP is used")
+            # target_link_libraries(prover PRIVATE OpenMP::OpenMP_CXX)
 
         else()
             set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
@@ -83,10 +86,19 @@ endif()
 add_subdirectory(src)
 
 
-install(TARGETS prover rapidsnark rapidsnarkStatic rapidsnarkStaticFrFq test_prover fr fq
+
+if(BUILD_SERVER)
+    install(TARGETS prover proverServer rapidsnark rapidsnarkStatic rapidsnarkStaticFrFq test_prover fr fq
     RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin
     BUNDLE DESTINATION ${CMAKE_INSTALL_PREFIX}/app
     LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
+elseif()
+    install(TARGETS prover rapidsnark rapidsnarkStatic rapidsnarkStaticFrFq test_prover fr fq
+    RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin
+    BUNDLE DESTINATION ${CMAKE_INSTALL_PREFIX}/app
+    LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
+endif()
+
 
 install(FILES "${GMP_LIB_DIR}/${GMP_LIB_FILE}"
     DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)

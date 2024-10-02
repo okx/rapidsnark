@@ -73,6 +73,7 @@ function buildProverServerSingleThread() {
         " -I../depends/pistache/include"+
         " -I../depends/json/single_include"+
         " -I../depends/ffiasm/c"+
+        " -I/opt/homebrew/opt/libomp/include"+
         " ../src/main_proofserver.cpp"+
         " ../src/proverapi.cpp"+
         " ../src/fullprover.cpp"+

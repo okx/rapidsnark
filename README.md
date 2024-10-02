@@ -1,32 +1,45 @@
 ## Important note
 
-**This is a new implementation of rapidsnark. The original (and now obsoleted) implemenation is available here: [rapidsnark-old](https://github.com/iden3/rapidsnark-old).**
+**This is a fork implementation of rapidsnark. The original (and now obsoleted) implemenation is available here: [rapidsnark-old](https://github.com/iden3/rapidsnark-old).**
 
 # rapidsnark
 
 Rapidsnark is a zkSnark proof generation written in C++ and intel/arm assembly. That generates proofs created in [circom](https://github.com/iden3/snarkjs) and [snarkjs](https://github.com/iden3/circom) very fast.
 
 ## Dependencies
+### dev tools
 
 You should have installed gcc, cmake, libsodium, and gmp (development)
 
-In ubuntu:
+- On ubuntu:
 
 ```
 sudo apt-get install build-essential cmake libgmp-dev libsodium-dev nasm curl m4
 ```
+- On mac
+```
+brew install gmp # install dependencies
+brew install libomp
+brew install libevent # for server
+```
 
-## Compile prover in server mode
-
-```sh
-npm install
+### third party project deps
+- nlohmann/json
+- circom_runtime
+- ffiasm
+- pistache (for proof server)
+```
 git submodule init
 git submodule update
-npm run task buildPistache
-npm run task createFieldSources
-npm run task buildProverServer
-# Single Thread, for testing purposes
-npm run task buildProverServerSingleThread
+```
+
+## build
+### macos_arm64
+```
+./build_gmp.sh macos_arm64
+mkdir -p build_prover_macos_arm64 && cd build_prover_macos_arm64
+cmake .. -DTARGET_PLATFORM=macos_arm64 -DBUILD_SERVER=ON -DLIB_EVENT_DIR=/opt/homebrew/opt/libevent/lib -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=../package -DUSE_OPENMP=ON -DLIB_OMP_PREFIX=/opt/homebrew/opt/libomp/ -DGMP_INCLUDE_DIR=/opt/homebrew/include -DGMP_LIB_DIR=/opt/homebrew/lib  -DUSE_LOGGER=ON
+make -j4 && make install
 ```
 
 ## Launch prover in server mode
@@ -69,18 +82,8 @@ cd ./depends/ffiasm/depends/cryptography_cuda/depends/blst/
 make host-gpu
 ```
 
-#### Compile prover for macOS arm64 host machine
+#### Compile prover for macOS arm64 machine
 
-```sh
-git submodule init
-git submodule update
-# ./build_gmp.sh macos_arm64 # this will produce some output files not whitlisted as per company policy
-brew install gmp # install dependencies
-brew install libomp
-mkdir -p build_prover_macos_arm64 && cd build_prover_macos_arm64
-cmake .. -DTARGET_PLATFORM=macos_arm64 -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=../package -DUSE_LOGGER=ON  -DGMP_INCLUDE_DIR=/opt/homebrew/include -DGMP_LIB_DIR=/opt/homebrew/lib
-make -j4 && make install
-```
 
 if want to also build proverServer
 ```sh
