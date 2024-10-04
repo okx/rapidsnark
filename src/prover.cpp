@@ -12,7 +12,9 @@
 #include "groth16.hpp"
 #include "binfile_utils.hpp"
 #include "logger.hpp"
-
+#if defined(USE_CUDA)
+#include "cuda.hpp"
+#endif
 using json = nlohmann::json;
 using namespace CPlusPlusLogging;
 
@@ -107,37 +109,42 @@ int groth16_prover(const void *zkey_buffer, unsigned long zkey_size,
             zkey.getSectionData(8), // pointsC
             zkey.getSectionData(9)  // pointsH1
         );
-        // end = omp_get_wtime();
-        // cpu_time_used = ((double)(end - start));
-        // // char *str;
-        // printf("time used zkey file laoding (ms): %.3lf\n", cpu_time_used * 1000);
-        // // LOG_DEBUG(str);
-        // AltBn128::FrElement *wtnsData = (AltBn128::FrElement *)wtns.getSectionData(2);
-        // double start_p, end_p;
-        // start_p = omp_get_wtime();
-        // auto proof = prover->prove(wtnsData);
-        // end_p = omp_get_wtime();
-        // double cpu_time_used_p = ((double)(end_p - start_p));
-        // // char *str;
-        // printf("time used proving (ms): %.3lf\n", cpu_time_used_p * 1000);
+        end = omp_get_wtime();
+        cpu_time_used = ((double)(end - start));
+        char print_buffer[100];
+        sprintf(print_buffer, "time used zkey file laoding (ms): %.3lf\n", cpu_time_used * 1000);
+        std::string print_str(print_buffer);
+        LOG_INFO(print_str);
 
-        // std::string stringProof = proof->toJson().dump();
-        // std::string stringPublic = BuildPublicString(wtnsData, zkeyHeader->nPublic);
+        AltBn128::FrElement *wtnsData = (AltBn128::FrElement *)wtns.getSectionData(2);
+        double start_p, end_p;
+        start_p = omp_get_wtime();
+        auto proof = prover->prove(wtnsData);
+        end_p = omp_get_wtime();
+        double cpu_time_used_p = ((double)(end_p - start_p));
 
-        // size_t stringProofSize = stringProof.length();
-        // size_t stringPublicSize = stringPublic.length();
+        char print_buffer_prove[100];
+        sprintf(print_buffer_prove, "time used proving (ms): %.3lf\n", cpu_time_used_p * 1000);
+        std::string print_str_prove(print_buffer_prove);
+        LOG_INFO(print_str_prove);
 
-        // if (*proof_size < stringProofSize || *public_size < stringPublicSize)
-        // {
+        std::string stringProof = proof->toJson().dump();
+        std::string stringPublic = BuildPublicString(wtnsData, zkeyHeader->nPublic);
 
-        //     *proof_size = stringProofSize;
-        //     *public_size = stringPublicSize;
+        size_t stringProofSize = stringProof.length();
+        size_t stringPublicSize = stringPublic.length();
 
-        //     return PPROVER_ERROR_SHORT_BUFFER;
-        // }
+        if (*proof_size < stringProofSize || *public_size < stringPublicSize)
+        {
 
-        // std::strncpy(proof_buffer, stringProof.data(), *proof_size);
-        // std::strncpy(public_buffer, stringPublic.data(), *public_size);
+            *proof_size = stringProofSize;
+            *public_size = stringPublicSize;
+
+            return PPROVER_ERROR_SHORT_BUFFER;
+        }
+
+        std::strncpy(proof_buffer, stringProof.data(), *proof_size);
+        std::strncpy(public_buffer, stringPublic.data(), *public_size);
     }
     catch (std::exception &e)
     {

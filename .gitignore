@@ -83,4 +83,4 @@ build/CMakeCache.txt
 build/Makefile
 build/*.txt
 
-.vscode
+.vscode/

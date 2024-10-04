@@ -49,7 +49,7 @@ git submodule update --init
 ./build_gmp.sh host
 npx task buildPistache
 mkdir -p build_prover_linux_x86_64 && cd build_prover_linux_x86_64
-cmake .. -DBUILD_SERVER=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=../package -DUSE_OPENMP=ON  -DUSE_LOGGER=ON
+cmake .. -DBUILD_SERVER=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=../package -DUSE_OPENMP=ON -DUSE_LOGGER=ON
 ```
 
 **WITH GPU**
@@ -63,7 +63,7 @@ cd ./depends/ffiasm/depends/cryptography_cuda/depends/blst/
 ./build.sh
 cd ../../../../../../
 mkdir -p build_prover_linux_x86_64_with_gpu && cd build_prover_linux_x86_64_with_gpu
-cmake .. -DBUILD_SERVER=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=../package -DUSE_OPENMP=ON  -DUSE_LOGGER=ON -DUSE_CUDA=ON
+cmake .. -DBUILD_SERVER=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=../package -DUSE_OPENMP=ON -DUSE_LOGGER=ON -DUSE_CUDA=ON
 ```
 
 #### Compile prover for linux arm64 host machine

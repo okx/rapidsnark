@@ -133,8 +133,8 @@ set(LIB_SOURCES
     fileloader.cpp
     # fileloader.hpp
     # groth16.hpp
-    # groth16.hpp
-    # cuda.cpp
+    groth16.hpp
+    cuda.cpp
     # cuda.hpp
     prover.cpp
     fullprover.cpp
@@ -220,33 +220,34 @@ endif()
 
 
 
-# add_executable(test_prover test_prover.cpp)
+add_executable(test_prover test_prover.cpp)
+target_include_directories(
+    test_prover
+    PUBLIC
+    ../src
+    ../build
+    ../depends/ffiasm/c
+    ../depends/json/single_include
+)
 
+if(BUILD_SERVER)
+    add_executable(
+        proverServer
+        main_proofserver.cpp
+        proverapi.cpp
+    )
 
-# if(BUILD_SERVER)
-#     add_executable(
-#         proverServer
-#         main_proofserver.cpp
-#         fullprover.cpp
-#         proverapi.cpp
-#         groth16.cpp
-#         binfile_utils.cpp
-#         fileloader.cpp
-#         wtns_utils.cpp
-#         zkey_utils.cpp
-#         )
-#     # " ../src/binfile_utils.cpp"+
-#     # " ../src/fileloader.cpp" +
-#     # " ../src/wtns_utils.cpp"+
-#     # " ../src/zkey_utils.cpp"+
-#     target_include_directories(proverServer PRIVATE ../depends/pistache/include/)
-#     target_include_directories(proverServer PRIVATE ../depends/pistache/build/src)
+    target_include_directories(proverServer PRIVATE ../depends/pistache/include/)
+    target_include_directories(proverServer PRIVATE ../depends/pistache/build/src)
 
-#     if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Mac")
-#         target_link_libraries(proverServer rapidsnarkStatic ${CMAKE_SOURCE_DIR}/depends/pistache/build/src/libpistache.dylib ${LIB_EVENT_DIR}/libevent.dylib ${LIB_EVENT_DIR}/libevent_pthreads.dylib)
-#     elseif(CMAKE_HOST_SYSTEM_NAME STREQUAL "Linux")
-#         message("BUILD prover server for LINUX")
-#         target_link_directories(proverServer PRIVATE ${CMAKE_SOURCE_DIR}/depends/pistache/build/src)
-#         target_link_libraries(proverServer PRIVATE pistache rapidsnarkStatic OpenMP::OpenMP_CXX cryptography_cuda)
-#     endif()
-# endif()
+    if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Darwin")
+        target_link_libraries(proverServer rapidsnark ${CMAKE_SOURCE_DIR}/depends/pistache/build/src/libpistache.dylib ${LIB_EVENT_DIR}/libevent.dylib ${LIB_EVENT_DIR}/libevent_pthreads.dylib)
+    elseif(CMAKE_HOST_SYSTEM_NAME STREQUAL "Linux")
+        message("BUILD prover server for LINUX")
+        target_link_directories(proverServer PRIVATE ${CMAKE_SOURCE_DIR}/depends/pistache/build/src)
+        target_link_libraries(proverServer PRIVATE pistache rapidsnark OpenMP::OpenMP_CXX)
+        if(USE_CUDA)
+            target_link_libraries(proverServer PRIVATE cryptography_cuda)
+        endif()
+    endif()
+endif()

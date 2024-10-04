@@ -89,15 +89,15 @@ add_subdirectory(src)
 
 
 if(BUILD_SERVER)
-    # install(TARGETS proverServer rapidsnark rapidsnarkStatic rapidsnarkStaticFrFq test_prover fr fq
-    # RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin
-    # BUNDLE DESTINATION ${CMAKE_INSTALL_PREFIX}/app
-    # LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
+    install(TARGETS proverServer prover rapidsnark test_prover fr fq
+    RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin
+    BUNDLE DESTINATION ${CMAKE_INSTALL_PREFIX}/app
+    LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
 elseif()
-    # install(TARGETS rapidsnark rapidsnarkStatic rapidsnarkStaticFrFq test_prover fr fq
-    # RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin
-    # BUNDLE DESTINATION ${CMAKE_INSTALL_PREFIX}/app
-    # LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
+    install(TARGETS prover rapidsnark test_prover fr fq
+    RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin
+    BUNDLE DESTINATION ${CMAKE_INSTALL_PREFIX}/app
+    LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
 endif()
 
 
