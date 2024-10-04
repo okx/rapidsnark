@@ -45,25 +45,28 @@ if (NOT EXISTS ${GMP_LIB_FILE_FULLPATH})
 endif()
 
 
-include_directories(BEFORE ${GMP_INCLUDE_DIR})
-include_directories(${LIB_OMP_PREFIX}/include)
-link_libraries(${LIB_OMP_PREFIX}/lib/libomp.dylib)
+if(TARGET_PLATFORM MATCHES "macos_arm64")
+    include_directories(BEFORE ${GMP_INCLUDE_DIR})
+    include_directories(${LIB_OMP_PREFIX}/include)
+    link_libraries(${LIB_OMP_PREFIX}/lib/libomp.dylib)
+endif()
 
 if(USE_OPENMP)
-    set(OpenMP_C "${CMAKE_C_COMPILER}" CACHE STRING "" FORCE)
-    set(OpenMP_C_FLAGS "-fopenmp -Wno-unused-command-line-argument" CACHE STRING "" FORCE)
-    set(OpenMP_C_LIB_NAMES "libomp" "libgomp" "libiomp5" CACHE STRING "" FORCE)
-    set(OpenMP_libomp_LIBRARY ${OpenMP_C_LIB_NAMES} CACHE STRING "" FORCE)
-    set(OpenMP_libgomp_LIBRARY ${OpenMP_C_LIB_NAMES} CACHE STRING "" FORCE)
-    set(OpenMP_libiomp5_LIBRARY ${OpenMP_C_LIB_NAMES} CACHE STRING "" FORCE)
+    # set(OpenMP_C "${CMAKE_C_COMPILER}" CACHE STRING "" FORCE)
+    # set(OpenMP_C_FLAGS "-fopenmp -Wno-unused-command-line-argument" CACHE STRING "" FORCE)
+    # set(OpenMP_C_LIB_NAMES "libomp" "libgomp" "libiomp5" CACHE STRING "" FORCE)
+    # set(OpenMP_libomp_LIBRARY ${OpenMP_C_LIB_NAMES} CACHE STRING "" FORCE)
+    # set(OpenMP_libgomp_LIBRARY ${OpenMP_C_LIB_NAMES} CACHE STRING "" FORCE)
+    # set(OpenMP_libiomp5_LIBRARY ${OpenMP_C_LIB_NAMES} CACHE STRING "" FORCE)
 
 
-    set(OpenMP_CXX "${CMAKE_CXX_COMPILER}" CACHE STRING "" FORCE)
-    set(OpenMP_CXX_FLAGS "-Xpreprocessor -fopenmp" CACHE STRING "" FORCE) # -fopenmp /opt/homebrew/opt/libomp/lib/libomp.dylib -I/opt/homebrew/opt/libomp/include
-    set(OpenMP_CXX_LIB_NAMES "libomp" "libgomp" "libiomp5" CACHE STRING "" FORCE)
-    set(OpenMP_libomp_LIBRARY ${OpenMP_CXX_LIB_NAMES} CACHE STRING "" FORCE)
-    set(OpenMP_libgomp_LIBRARY ${OpenMP_CXX_LIB_NAMES} CACHE STRING "" FORCE)
-    set(OpenMP_libiomp5_LIBRARY ${OpenMP_CXX_LIB_NAMES} CACHE STRING "" FORCE)
+    # set(OpenMP_CXX "${CMAKE_CXX_COMPILER}" CACHE STRING "" FORCE)
+    # set(OpenMP_CXX_FLAGS "-Xpreprocessor -fopenmp" CACHE STRING "" FORCE) # -fopenmp /opt/homebrew/opt/libomp/lib/libomp.dylib -I/opt/homebrew/opt/libomp/include
+    # set(OpenMP_CXX_LIB_NAMES "libomp" "libgomp" "libiomp5" CACHE STRING "" FORCE)
+    # set(OpenMP_libomp_LIBRARY ${OpenMP_CXX_LIB_NAMES} CACHE STRING "" FORCE)
+    # set(OpenMP_libgomp_LIBRARY ${OpenMP_CXX_LIB_NAMES} CACHE STRING "" FORCE)
+    # set(OpenMP_libiomp5_LIBRARY ${OpenMP_CXX_LIB_NAMES} CACHE STRING "" FORCE)
+
     find_package(OpenMP REQUIRED)
 
     if(OpenMP_CXX_FOUND)
@@ -72,8 +75,6 @@ if(USE_OPENMP)
 
         elseif(CMAKE_HOST_SYSTEM_NAME STREQUAL "Linux")
             message("OpenMP is used")
-            # target_link_libraries(prover PRIVATE OpenMP::OpenMP_CXX)
-
         else()
             set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
             message("OpenMP is not used")
@@ -88,15 +89,15 @@ add_subdirectory(src)
 
 
 if(BUILD_SERVER)
-    install(TARGETS prover proverServer rapidsnark rapidsnarkStatic rapidsnarkStaticFrFq test_prover fr fq
-    RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin
-    BUNDLE DESTINATION ${CMAKE_INSTALL_PREFIX}/app
-    LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
+    # install(TARGETS proverServer rapidsnark rapidsnarkStatic rapidsnarkStaticFrFq test_prover fr fq
+    # RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin
+    # BUNDLE DESTINATION ${CMAKE_INSTALL_PREFIX}/app
+    # LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
 elseif()
-    install(TARGETS prover rapidsnark rapidsnarkStatic rapidsnarkStaticFrFq test_prover fr fq
-    RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin
-    BUNDLE DESTINATION ${CMAKE_INSTALL_PREFIX}/app
-    LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
+    # install(TARGETS rapidsnark rapidsnarkStatic rapidsnarkStaticFrFq test_prover fr fq
+    # RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin
+    # BUNDLE DESTINATION ${CMAKE_INSTALL_PREFIX}/app
+    # LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
 endif()
 
 

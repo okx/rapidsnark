@@ -15,6 +15,7 @@
 
 using json = nlohmann::json;
 using namespace CPlusPlusLogging;
+
 static size_t ProofBufferMinSize()
 {
     return 726;
@@ -106,31 +107,37 @@ int groth16_prover(const void *zkey_buffer, unsigned long zkey_size,
             zkey.getSectionData(8), // pointsC
             zkey.getSectionData(9)  // pointsH1
         );
-        end = omp_get_wtime();
-        cpu_time_used = ((double)(end - start));
-        // char *str;
-        printf("time used zkey file laoding (ms): %.3lf\n", cpu_time_used * 1000);
-        // LOG_DEBUG(str);
-        AltBn128::FrElement *wtnsData = (AltBn128::FrElement *)wtns.getSectionData(2);
-        auto proof = prover->prove(wtnsData);
+        // end = omp_get_wtime();
+        // cpu_time_used = ((double)(end - start));
+        // // char *str;
+        // printf("time used zkey file laoding (ms): %.3lf\n", cpu_time_used * 1000);
+        // // LOG_DEBUG(str);
+        // AltBn128::FrElement *wtnsData = (AltBn128::FrElement *)wtns.getSectionData(2);
+        // double start_p, end_p;
+        // start_p = omp_get_wtime();
+        // auto proof = prover->prove(wtnsData);
+        // end_p = omp_get_wtime();
+        // double cpu_time_used_p = ((double)(end_p - start_p));
+        // // char *str;
+        // printf("time used proving (ms): %.3lf\n", cpu_time_used_p * 1000);
 
-        std::string stringProof = proof->toJson().dump();
-        std::string stringPublic = BuildPublicString(wtnsData, zkeyHeader->nPublic);
+        // std::string stringProof = proof->toJson().dump();
+        // std::string stringPublic = BuildPublicString(wtnsData, zkeyHeader->nPublic);
 
-        size_t stringProofSize = stringProof.length();
-        size_t stringPublicSize = stringPublic.length();
+        // size_t stringProofSize = stringProof.length();
+        // size_t stringPublicSize = stringPublic.length();
 
-        if (*proof_size < stringProofSize || *public_size < stringPublicSize)
-        {
+        // if (*proof_size < stringProofSize || *public_size < stringPublicSize)
+        // {
 
-            *proof_size = stringProofSize;
-            *public_size = stringPublicSize;
+        //     *proof_size = stringProofSize;
+        //     *public_size = stringPublicSize;
 
-            return PPROVER_ERROR_SHORT_BUFFER;
-        }
+        //     return PPROVER_ERROR_SHORT_BUFFER;
+        // }
 
-        std::strncpy(proof_buffer, stringProof.data(), *proof_size);
-        std::strncpy(public_buffer, stringPublic.data(), *public_size);
+        // std::strncpy(proof_buffer, stringProof.data(), *proof_size);
+        // std::strncpy(public_buffer, stringPublic.data(), *public_size);
     }
     catch (std::exception &e)
     {
