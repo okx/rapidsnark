@@ -7,18 +7,8 @@ using json = nlohmann::json;
 #include "logging.hpp"
 #include "fft.hpp"
 #include "random_generator.hpp"
-// #include "logging.hpp"
 #include "alt_bn128.hpp"
 #include <future>
-
-// using namespace AltBn128;
-
-// #if defined(USE_CUDA)
-
-// #endif
-// #endif
-
-
 
 namespace Groth16
 {

@@ -45,29 +45,8 @@ if (NOT EXISTS ${GMP_LIB_FILE_FULLPATH})
 endif()
 
 
-if(TARGET_PLATFORM MATCHES "macos_arm64")
-    include_directories(BEFORE ${GMP_INCLUDE_DIR})
-    include_directories(${LIB_OMP_PREFIX}/include)
-    link_libraries(${LIB_OMP_PREFIX}/lib/libomp.dylib)
-endif()
-
 if(USE_OPENMP)
-    # set(OpenMP_C "${CMAKE_C_COMPILER}" CACHE STRING "" FORCE)
-    # set(OpenMP_C_FLAGS "-fopenmp -Wno-unused-command-line-argument" CACHE STRING "" FORCE)
-    # set(OpenMP_C_LIB_NAMES "libomp" "libgomp" "libiomp5" CACHE STRING "" FORCE)
-    # set(OpenMP_libomp_LIBRARY ${OpenMP_C_LIB_NAMES} CACHE STRING "" FORCE)
-    # set(OpenMP_libgomp_LIBRARY ${OpenMP_C_LIB_NAMES} CACHE STRING "" FORCE)
-    # set(OpenMP_libiomp5_LIBRARY ${OpenMP_C_LIB_NAMES} CACHE STRING "" FORCE)
-
-
-    # set(OpenMP_CXX "${CMAKE_CXX_COMPILER}" CACHE STRING "" FORCE)
-    # set(OpenMP_CXX_FLAGS "-Xpreprocessor -fopenmp" CACHE STRING "" FORCE) # -fopenmp /opt/homebrew/opt/libomp/lib/libomp.dylib -I/opt/homebrew/opt/libomp/include
-    # set(OpenMP_CXX_LIB_NAMES "libomp" "libgomp" "libiomp5" CACHE STRING "" FORCE)
-    # set(OpenMP_libomp_LIBRARY ${OpenMP_CXX_LIB_NAMES} CACHE STRING "" FORCE)
-    # set(OpenMP_libgomp_LIBRARY ${OpenMP_CXX_LIB_NAMES} CACHE STRING "" FORCE)
-    # set(OpenMP_libiomp5_LIBRARY ${OpenMP_CXX_LIB_NAMES} CACHE STRING "" FORCE)
-
-    find_package(OpenMP REQUIRED)
+    find_package(OpenMP)
 
     if(OpenMP_CXX_FOUND)
         if(TARGET_PLATFORM MATCHES "android")
@@ -86,20 +65,17 @@ endif()
 
 add_subdirectory(src)
 
-
-
 if(BUILD_SERVER)
-    install(TARGETS proverServer prover rapidsnark test_prover fr fq
+    install(TARGETS proverServer prover test_prover rapidsnark fr fq
     RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin
     BUNDLE DESTINATION ${CMAKE_INSTALL_PREFIX}/app
     LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
 elseif()
-    install(TARGETS prover rapidsnark test_prover fr fq
+    install(TARGETS prover test_prover rapidsnark fr fq
     RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin
     BUNDLE DESTINATION ${CMAKE_INSTALL_PREFIX}/app
     LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
 endif()
-
 
 install(FILES "${GMP_LIB_DIR}/${GMP_LIB_FILE}"
     DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)

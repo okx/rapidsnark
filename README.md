@@ -39,7 +39,7 @@ git submodule update
 ./build_gmp.sh macos_arm64
 npx task buildPistacheMac # if server is needed
 mkdir -p build_prover_macos_arm64 && cd build_prover_macos_arm64
-cmake .. -DTARGET_PLATFORM=macos_arm64 -DBUILD_SERVER=ON -DLIB_EVENT_DIR=/opt/homebrew/opt/libevent/lib -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=../package -DUSE_OPENMP=ON -DLIB_OMP_PREFIX=/opt/homebrew/opt/libomp/ -DGMP_INCLUDE_DIR=/opt/homebrew/include -DGMP_LIB_DIR=/opt/homebrew/lib  -DUSE_LOGGER=ON
+cmake .. -DTARGET_PLATFORM=macos_arm64 -DBUILD_SERVER=ON -DLIB_EVENT_DIR=/opt/homebrew/opt/libevent/lib -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=../package -DUSE_OPENMP=ON -DLIB_OMP_PREFIX=/opt/homebrew/opt/libomp/ -DGMP_INCLUDE_DIR=/opt/homebrew/include -DGMP_LIB_DIR=/opt/homebrew/lib -DUSE_LOGGER=ON
 make -j4 && make install
 ```
 
@@ -66,7 +66,7 @@ mkdir -p build_prover_linux_x86_64_with_gpu && cd build_prover_linux_x86_64_with
 cmake .. -DBUILD_SERVER=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=../package -DUSE_OPENMP=ON -DUSE_LOGGER=ON -DUSE_CUDA=ON
 ```
 
-#### Compile prover for linux arm64 host machine
+### linux arm64 host machine
 
 ```sh
 git submodule init
@@ -132,7 +132,7 @@ xcodebuild -destination 'generic/platform=iOS' -scheme rapidsnarkStatic -project
 ```
 Open generated Xcode project and compile prover.
 
-## Build for iOS emulator
+### iOS emulator
 
 Install Xcode
 

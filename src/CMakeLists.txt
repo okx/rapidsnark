@@ -122,23 +122,15 @@ if(OpenMP_CXX_FOUND)
 endif()
 
 set(LIB_SOURCES
-    # binfile_utils.hpp
     binfile_utils.cpp
-    # zkey_utils.hpp
     zkey_utils.cpp
-    # wtns_utils.hpp
     wtns_utils.cpp
-    # logger.hpp
     logger.cpp
     fileloader.cpp
-    # fileloader.hpp
-    # groth16.hpp
     groth16.hpp
     cuda.cpp
-    # cuda.hpp
     prover.cpp
     fullprover.cpp
-    # prover.h
     ../depends/ffiasm/c/misc.cpp
     ../depends/ffiasm/c/naf.cpp
     ../depends/ffiasm/c/splitparstr.cpp
@@ -160,6 +152,20 @@ target_include_directories(
     ../depends/json/single_include
 )
 
+if(TARGET_PLATFORM MATCHES "macos_arm64")
+    target_include_directories(rapidsnark PUBLIC ${GMP_INCLUDE_DIR})
+    target_include_directories(rapidsnark PUBLIC ${LIB_OMP_PREFIX}/include)
+    target_link_libraries(rapidsnark PUBLIC ${LIB_OMP_PREFIX}/lib/libomp.dylib)
+
+    target_include_directories(fr PUBLIC ${GMP_INCLUDE_DIR})
+    target_include_directories(fr PUBLIC ${LIB_OMP_PREFIX}/include)
+    target_link_libraries(fr PUBLIC ${LIB_OMP_PREFIX}/lib/libomp.dylib)
+
+    target_include_directories(fq PUBLIC ${GMP_INCLUDE_DIR})
+    target_include_directories(fq PUBLIC ${LIB_OMP_PREFIX}/include)
+    target_link_libraries(fq PUBLIC ${LIB_OMP_PREFIX}/lib/libomp.dylib)
+endif()
+
 # add_library(rapidsnarkStatic STATIC ${LIB_SOURCES})
 # set_target_properties(rapidsnarkStatic PROPERTIES OUTPUT_NAME rapidsnark)
 
@@ -167,36 +173,11 @@ target_include_directories(
 # set_target_properties(rapidsnarkStaticFrFq PROPERTIES POSITION_INDEPENDENT_CODE ON)
 # set_target_properties(rapidsnarkStaticFrFq PROPERTIES OUTPUT_NAME rapidsnark-fr-fq)
 
-# " ../src/binfile_utils.cpp"+
-# " ../src/fileloader.cpp" +
-# " ../src/prover.cpp"+
-# " ../src/zkey_utils.cpp"+
-# " ../src/wtns_utils.cpp"+
-# " ../src/logger.cpp"+
-
 add_executable(
     prover
     main_prover.cpp
-    # binfile_utils.cpp
-    # fileloader.cpp
-    # groth16.hpp
-    # prover.cpp
-    # zkey_utils.cpp
-    # wtns_utils.cpp
-    # logger.cpp
-    # ../depends/ffiasm/c/misc.cpp
-    # ../depends/ffiasm/c/naf.cpp
-    # ../depends/ffiasm/c/splitparstr.cpp
-    # ../depends/ffiasm/c/alt_bn128.cpp
 )
-# target_include_directories(proverStandalone PRIVATE
-#     ../src
-#     ../build
-#     ../depends/ffiasm/c
-#     ../depends/json/single_include
-# )
-# target_compile_definitions(prover PRIVATE -DFEATURE_BN254 -DG2_ENABLED)
-# # # #
+
 target_link_libraries(prover rapidsnark)
 if(OpenMP_CXX_FOUND)
     if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Linux")
@@ -205,7 +186,6 @@ if(OpenMP_CXX_FOUND)
 endif()
 
 if(USE_CUDA)
-    # target_include_directories(prover PUBLIC "/data/workspace/cliff/cryptography_cuda/src")
     target_link_libraries(prover cryptography_cuda)
 endif(USE_CUDA)
 
@@ -217,8 +197,6 @@ endif()
 if(USE_SODIUM)
     target_link_libraries(prover sodium)
 endif()
-
-
 
 add_executable(test_prover test_prover.cpp)
 target_include_directories(

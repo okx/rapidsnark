@@ -5,16 +5,18 @@
 #include <stdexcept>
 #include <alt_bn128.hpp>
 #include <nlohmann/json.hpp>
-
+#include <omp.h>
 #include "prover.h"
 #include "zkey_utils.hpp"
 #include "wtns_utils.hpp"
 #include "groth16.hpp"
 #include "binfile_utils.hpp"
 #include "logger.hpp"
+
 #if defined(USE_CUDA)
 #include "cuda.hpp"
 #endif
+
 using json = nlohmann::json;
 using namespace CPlusPlusLogging;
 

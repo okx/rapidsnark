@@ -6,7 +6,6 @@
 #include "alt_bn128.hpp"
 #include "logging.hpp"
 
-
 #include "../depends/ffiasm/depends/cryptography_cuda/src/lib.h"
 
 using namespace AltBn128;

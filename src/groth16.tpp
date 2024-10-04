@@ -1,7 +1,6 @@
 #ifndef GROTH16_TPP
 #define GROTH16_TPP
 
-
 #include "random_generator.hpp"
 #include "logging.hpp"
 #include "alt_bn128.hpp"
@@ -10,21 +9,6 @@
 
 static double g1_msm = 0;
 static double g2_msm = 0;
-
-// #include <blst_t.hpp>
-// #include "./field/fr.hpp"
-
-
-// using namespace AltBn128;
-
-#if defined(USE_CUDA)
-
-#endif
-
-// #if defined(USE_CUDA)
-// #include "../depends/ffiasm/depends/cryptography_cuda/src/lib.h"
-// #include <blst_t.hpp>
-// #endif
 
 namespace Groth16
 {

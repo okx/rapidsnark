@@ -5,7 +5,6 @@
 #include "fileloader.hpp"
 #include "prover.h"
 #include "logger.hpp"
-// #include "groth16.tpp"
 
 using namespace CPlusPlusLogging;
 #define handle_error(msg) \

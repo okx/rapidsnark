@@ -2,13 +2,18 @@
 
 #Build targets
 host:
-	rm -rf build_prover && mkdir build_prover && cd build_prover && \
-	cmake .. -DUSE_CUDA=OFF -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=../package -DUSE_LOGGER=ON -DG2_ENABLED=ON && \
+	rm -rf build_prover_linux_x86_64 && mkdir build_prover_linux_x86_64 && cd build_prover_linux_x86_64 && \
+	cmake .. -DBUILD_SERVER=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=../package -DUSE_OPENMP=ON -DUSE_LOGGER=ON && \
 	make -j$(nproc) -vvv && make install
 
 host-gpu:
-	rm -rf build_prover_gpu && mkdir build_prover_gpu && cd build_prover_gpu && \
-	cmake .. -DUSE_CUDA=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=../package -DUSE_LOGGER=ON -DG2_ENABLED=ON && \
+	rm -rf build_prover_linux_x86_64_with_gpu && mkdir build_prover_linux_x86_64_with_gpu && cd build_prover_linux_x86_64_with_gpu && \
+	cmake .. -DBUILD_SERVER=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=../package -DUSE_OPENMP=ON -DUSE_LOGGER=ON -DUSE_CUDA=ON && \
+	make -j$(nproc) -vvv && make install
+
+macos_arm64:
+	rm -rf build_prover_macos_arm64 && mkdir -p build_prover_macos_arm64 && cd build_prover_macos_arm64 && \
+	cmake .. -DTARGET_PLATFORM=macos_arm64 -DBUILD_SERVER=ON -DLIB_EVENT_DIR=/opt/homebrew/opt/libevent/lib -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=../package -DUSE_OPENMP=ON -DLIB_OMP_PREFIX=/opt/homebrew/opt/libomp/ -DGMP_INCLUDE_DIR=/opt/homebrew/include -DGMP_LIB_DIR=/opt/homebrew/lib -DUSE_LOGGER=ON && \
 	make -j$(nproc) -vvv && make install
 
 android:
