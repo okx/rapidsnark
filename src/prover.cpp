@@ -5,7 +5,7 @@
 #include <stdexcept>
 #include <alt_bn128.hpp>
 #include <nlohmann/json.hpp>
-
+#include <omp.h>
 #include "prover.h"
 #include "zkey_utils.hpp"
 #include "wtns_utils.hpp"
@@ -13,8 +13,13 @@
 #include "binfile_utils.hpp"
 #include "logger.hpp"
 
+#if defined(USE_CUDA)
+#include "cuda.hpp"
+#endif
+
 using json = nlohmann::json;
 using namespace CPlusPlusLogging;
+
 static size_t ProofBufferMinSize()
 {
     return 726;
@@ -108,11 +113,22 @@ int groth16_prover(const void *zkey_buffer, unsigned long zkey_size,
         );
         end = omp_get_wtime();
         cpu_time_used = ((double)(end - start));
-        // char *str;
-        printf("time used zkey file laoding (ms): %.3lf\n", cpu_time_used * 1000);
-        // LOG_DEBUG(str);
+        char print_buffer[100];
+        sprintf(print_buffer, "time used zkey file loading (ms): %.3lf\n", cpu_time_used * 1000);
+        std::string print_str(print_buffer);
+        LOG_INFO(print_str);
+
         AltBn128::FrElement *wtnsData = (AltBn128::FrElement *)wtns.getSectionData(2);
+        double start_p, end_p;
+        start_p = omp_get_wtime();
         auto proof = prover->prove(wtnsData);
+        end_p = omp_get_wtime();
+        double cpu_time_used_p = ((double)(end_p - start_p));
+
+        char print_buffer_prove[100];
+        sprintf(print_buffer_prove, "time used proving (ms): %.3lf\n", cpu_time_used_p * 1000);
+        std::string print_str_prove(print_buffer_prove);
+        LOG_INFO(print_str_prove);
 
         std::string stringProof = proof->toJson().dump();
         std::string stringPublic = BuildPublicString(wtnsData, zkeyHeader->nPublic);

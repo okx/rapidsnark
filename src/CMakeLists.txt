@@ -122,18 +122,15 @@ if(OpenMP_CXX_FOUND)
 endif()
 
 set(LIB_SOURCES
-    binfile_utils.hpp
     binfile_utils.cpp
-    zkey_utils.hpp
     zkey_utils.cpp
-    wtns_utils.hpp
     wtns_utils.cpp
-    logger.hpp
     logger.cpp
     fileloader.cpp
-    fileloader.hpp
+    groth16.hpp
+    cuda.cpp
     prover.cpp
-    prover.h
+    fullprover.cpp
     ../depends/ffiasm/c/misc.cpp
     ../depends/ffiasm/c/naf.cpp
     ../depends/ffiasm/c/splitparstr.cpp
@@ -145,29 +142,53 @@ if(USE_LOGGER)
     add_definitions(-DUSE_LOGGER)
 endif()
 
-include_directories(
+add_library(rapidsnark SHARED ${LIB_SOURCES})
+target_include_directories(
+    rapidsnark
+    PUBLIC
     ../src
     ../build
     ../depends/ffiasm/c
-    ../depends/json/single_include)
+    ../depends/json/single_include
+)
 
-add_library(rapidsnarkStatic STATIC ${LIB_SOURCES})
-set_target_properties(rapidsnarkStatic PROPERTIES OUTPUT_NAME rapidsnark)
+if(TARGET_PLATFORM MATCHES "macos_arm64")
+    target_include_directories(rapidsnark PUBLIC ${GMP_INCLUDE_DIR})
+    target_include_directories(rapidsnark PUBLIC ${LIB_OMP_PREFIX}/include)
+    target_link_libraries(rapidsnark PUBLIC ${LIB_OMP_PREFIX}/lib/libomp.dylib)
 
-add_library(rapidsnarkStaticFrFq STATIC ${LIB_SOURCES} ${FQ_SOURCES} ${FR_SOURCES})
-set_target_properties(rapidsnarkStaticFrFq PROPERTIES POSITION_INDEPENDENT_CODE ON)
-set_target_properties(rapidsnarkStaticFrFq PROPERTIES OUTPUT_NAME rapidsnark-fr-fq)
+    target_include_directories(fr PUBLIC ${GMP_INCLUDE_DIR})
+    target_include_directories(fr PUBLIC ${LIB_OMP_PREFIX}/include)
+    target_link_libraries(fr PUBLIC ${LIB_OMP_PREFIX}/lib/libomp.dylib)
 
-add_executable(prover main_prover.cpp)
-target_compile_definitions(prover PUBLIC -DFEATURE_BN254 -DG2_ENABLED)
-# target_include_directories(prover PUBLIC "/data/workspace/cliff/cryptography_cuda/src")
-target_link_libraries(prover rapidsnarkStatic)
+    target_include_directories(fq PUBLIC ${GMP_INCLUDE_DIR})
+    target_include_directories(fq PUBLIC ${LIB_OMP_PREFIX}/include)
+    target_link_libraries(fq PUBLIC ${LIB_OMP_PREFIX}/lib/libomp.dylib)
+endif()
+
+# add_library(rapidsnarkStatic STATIC ${LIB_SOURCES})
+# set_target_properties(rapidsnarkStatic PROPERTIES OUTPUT_NAME rapidsnark)
+
+# add_library(rapidsnarkStaticFrFq STATIC ${LIB_SOURCES} ${FQ_SOURCES} ${FR_SOURCES})
+# set_target_properties(rapidsnarkStaticFrFq PROPERTIES POSITION_INDEPENDENT_CODE ON)
+# set_target_properties(rapidsnarkStaticFrFq PROPERTIES OUTPUT_NAME rapidsnark-fr-fq)
+
+add_executable(
+    prover
+    main_prover.cpp
+)
+
+target_link_libraries(prover rapidsnark)
+if(OpenMP_CXX_FOUND)
+    if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Linux")
+        target_link_libraries(prover OpenMP::OpenMP_CXX)
+    endif()
+endif()
 
 if(USE_CUDA)
     target_link_libraries(prover cryptography_cuda)
 endif(USE_CUDA)
 
-add_library(rapidsnark SHARED ${LIB_SOURCES})
 
 if(USE_LOGGER OR NOT USE_OPENMP)
     target_link_libraries(prover pthread)
@@ -177,10 +198,34 @@ if(USE_SODIUM)
     target_link_libraries(prover sodium)
 endif()
 
-if(OpenMP_CXX_FOUND)
-    if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Linux")
-        target_link_libraries(prover OpenMP::OpenMP_CXX)
+add_executable(test_prover test_prover.cpp)
+target_include_directories(
+    test_prover
+    PUBLIC
+    ../src
+    ../build
+    ../depends/ffiasm/c
+    ../depends/json/single_include
+)
+
+if(BUILD_SERVER)
+    add_executable(
+        proverServer
+        main_proofserver.cpp
+        proverapi.cpp
+    )
+
+    target_include_directories(proverServer PRIVATE ../depends/pistache/include/)
+    target_include_directories(proverServer PRIVATE ../depends/pistache/build/src)
+
+    if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Darwin")
+        target_link_libraries(proverServer rapidsnark ${CMAKE_SOURCE_DIR}/depends/pistache/build/src/libpistache.dylib ${LIB_EVENT_DIR}/libevent.dylib ${LIB_EVENT_DIR}/libevent_pthreads.dylib)
+    elseif(CMAKE_HOST_SYSTEM_NAME STREQUAL "Linux")
+        message("BUILD prover server for LINUX")
+        target_link_directories(proverServer PRIVATE ${CMAKE_SOURCE_DIR}/depends/pistache/build/src)
+        target_link_libraries(proverServer PRIVATE pistache rapidsnark OpenMP::OpenMP_CXX)
+        if(USE_CUDA)
+            target_link_libraries(proverServer PRIVATE cryptography_cuda)
+        endif()
     endif()
 endif()
-
-add_executable(test_prover test_prover.cpp)

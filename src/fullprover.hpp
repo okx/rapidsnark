@@ -39,7 +39,7 @@ class FullProver {
 
 
 
-public: 
+public:
     FullProver(std::string zkeyFileNames[], int size);
     ~FullProver();
     void startProve(std::string input, std::string circuit);

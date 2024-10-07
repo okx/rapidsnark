@@ -9,6 +9,10 @@
 #include "logger.hpp"
 #include "wtns_utils.hpp"
 
+#if defined(USE_CUDA)
+#include "cuda.hpp"
+#endif
+
 using namespace CPlusPlusLogging;
 
 std::string getfilename(std::string path)
@@ -35,7 +39,7 @@ FullProver::FullProver(std::string zkeyFileNames[], int size) {
         if (mpz_cmp(zkHeaders[circuit]->rPrime, altBbn128r) != 0) {
             throw std::invalid_argument( "zkey curve not supported" );
         }
-        
+
         std::ostringstream ss1;
         ss1 << "circuit: " << circuit;
         LOG_DEBUG(ss1);
@@ -102,13 +106,13 @@ void FullProver::checkPending() {
 
 void FullProver::thread_calculateProve() {
     LOG_TRACE("FullProver::thread_calculateProve start");
-    
+
     try {
         LOG_TRACE(executingInput);
         // Generate witness
         json j = json::parse(executingInput);
         std::string circuit = executingCircuit;
-        
+
         std::ofstream file("./build/input_"+ circuit +".json");
         file << j;
         file.close();
@@ -133,11 +137,11 @@ void FullProver::thread_calculateProve() {
 
         std::cout << result << std::endl;
         std::cout << returnCode << std::endl;
-        
+
         // Load witness
         auto wtns = BinFileUtils::openExisting(witnessFile, "wtns", 2);
         auto wtnsHeader = WtnsUtils::loadHeader(wtns.get());
-                
+
         if (mpz_cmp(wtnsHeader->prime, altBbn128r) != 0) {
             throw std::invalid_argument( "different wtns curve" );
         }
@@ -150,14 +154,14 @@ void FullProver::thread_calculateProve() {
             AltBn128::Fr.toMontgomery(aux, wtnsData[i]);
             pubData.push_back(AltBn128::Fr.toString(aux));
         }
-        
+
         if (!isCanceled()) {
             proof = provers[circuit]->prove(wtnsData)->toJson();
         } else {
             LOG_TRACE("AVOIDING prove");
             proof = {};
         }
-       
+
 
         calcFinished();
     } catch (std::runtime_error e) {
@@ -165,7 +169,7 @@ void FullProver::thread_calculateProve() {
             errString = e.what();
         }
         calcFinished();
-    } 
+    }
 
     LOG_TRACE("FullProver::thread_calculateProve end");
 }

@@ -26,7 +26,12 @@ int main(int argc, char **argv)
     Logger::getInstance()->enableConsoleLogging();
     Logger::getInstance()->updateLogLevel(LOG_LEVEL_DEBUG);
     Logger::getInstance()->enableFileLogging();
-    LOG_INFO("start run prover in standalone mode...");
+    #if defined(USE_CUDA)
+        LOG_INFO("start run prover in standalone mode, with GPU support ...");
+    #else
+        LOG_INFO("start run prover in standalone mode...");
+    #endif
+
     try {
         std::string zkeyFilename = argv[1];
         std::string wtnsFilename = argv[2];

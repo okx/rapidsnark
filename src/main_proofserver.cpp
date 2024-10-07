@@ -15,6 +15,12 @@ int main(int argc, char **argv) {
         return -1;
     }
 
+    #if defined(USE_CUDA)
+        LOG_INFO("start run prover in server mode, with GPU support ...");
+    #else
+        LOG_INFO("start run prover in server mode...");
+    #endif
+
     Logger::getInstance()->enableConsoleLogging();
     Logger::getInstance()->updateLogLevel(LOG_LEVEL_DEBUG);
     LOG_INFO("Initializing server...");
