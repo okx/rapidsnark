@@ -10,7 +10,7 @@ include(cmake/platform.cmake)
 
 set(USE_ASM    ON CACHE BOOL "Use asm implementation for Fr and Fq")
 set(USE_OPENMP ON CACHE BOOL "Use OpenMP")
-set(BUILD_SERVER OFF CACHE BOOL "Use OpenMP")
+set(BUILD_SERVER OFF CACHE BOOL "Build Server mode")
 set(G2_ENABLED OFF CACHE BOOL "enable G2 curve")
 
 if(G2_ENABLED)

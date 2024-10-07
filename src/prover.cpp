@@ -114,7 +114,7 @@ int groth16_prover(const void *zkey_buffer, unsigned long zkey_size,
         end = omp_get_wtime();
         cpu_time_used = ((double)(end - start));
         char print_buffer[100];
-        sprintf(print_buffer, "time used zkey file laoding (ms): %.3lf\n", cpu_time_used * 1000);
+        sprintf(print_buffer, "time used zkey file loading (ms): %.3lf\n", cpu_time_used * 1000);
         std::string print_str(print_buffer);
         LOG_INFO(print_str);
 
