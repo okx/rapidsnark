@@ -6,9 +6,9 @@
 	url = https://github.com/iden3/circom_runtime.git
 [submodule "depends/ffiasm"]
 	path = depends/ffiasm
-	url = git@github.com:okx/ffiasm.git
+	url = https://github.com/okx/ffiasm.git
 	branch = master
 [submodule "depends/pistache"]
 	path = depends/pistache
-	url = git@github.com:okx/pistache.git
+	url = https://github.com/okx/pistache.git
 	branch = master
