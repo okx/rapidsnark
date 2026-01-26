@@ -71,6 +71,8 @@ CMakeLists.txt.user
 depends/gmp*
 
 build_*
+!build_pistache.sh
+
 package*
 
 build/
