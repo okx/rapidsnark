@@ -86,3 +86,13 @@ build/Makefile
 build/*.txt
 
 .vscode/
+
+# Powers of tau ceremony files (large, downloaded)
+*.ptau
+
+# Circuit artifacts - zkeys are large, vkeys are small JSON (keep vkeys)
+zkeys/*.zkey
+zkeys/*_old.zkey
+
+# Generated witness files
+*.wtns

@@ -16,6 +16,7 @@ sudo apt-get install build-essential cmake libgmp-dev libsodium-dev nasm curl m4
 ```
 brew install gmp # install dependencies
 brew install libomp
+brew install nasm
 brew install libevent # for server
 ```
 
