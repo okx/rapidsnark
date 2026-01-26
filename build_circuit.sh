@@ -37,44 +37,37 @@ fi
 
 echo "Circuit compiled successfully"
 
-# Build C++ witness generator
-echo "Building C++ witness generator..."
-cd "${BUILD_DIR}/02x03_cpp"
-
-# Patch Makefile to include nlohmann/json and gmp paths
-sed -i '' 's|CFLAGS=-std=c++11 -O3 -I.|CFLAGS=-std=c++11 -O3 -I. -I../../depends/json/single_include -I/opt/homebrew/include|' Makefile
-sed -i '' 's|-lgmp|-L/opt/homebrew/lib -lgmp|' Makefile
-
-# For ARM64 (Apple Silicon), use generic C++ implementation instead of x86_64 assembly
+# For ARM64 (Apple Silicon), skip C++ build and use WASM wrapper
 if [ "$(uname -m)" = "arm64" ]; then
-    echo "Detected ARM64, using generic C++ implementation..."
-    # Copy generic implementations
-    cp "${SCRIPT_DIR}/build/fr_generic.cpp" fr.cpp
-    cp "${SCRIPT_DIR}/build/fr_raw_generic.cpp" fr_raw.cpp
-    # Update Makefile: remove fr_asm.o, add fr_raw.o
-    sed -i '' 's|fr_asm.o|fr_raw.o|' Makefile
-    # Remove the nasm rule and add C++ rule for fr_raw
-    sed -i '' '/^fr_asm.o:/,/$(NASM)/c\
-fr_raw.o: fr_raw.cpp\
-	$(CC) -c fr_raw.cpp $(CFLAGS)
-' Makefile
+    echo "Detected ARM64, creating WASM-based witness generator wrapper..."
+    cat > "${BUILD_DIR}/02x03" << 'WRAPPER'
+#!/bin/bash
+# WASM-based witness generator wrapper for ARM64 compatibility
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+WASM_FILE="${SCRIPT_DIR}/02x03_js/02x03.wasm"
+INPUT_FILE="$1"
+WITNESS_FILE="$2"
+npx snarkjs wtns calculate "$WASM_FILE" "$INPUT_FILE" "$WITNESS_FILE"
+WRAPPER
+    chmod +x "${BUILD_DIR}/02x03"
+else
+    # Build C++ witness generator for x86_64
+    echo "Building C++ witness generator..."
+    cd "${BUILD_DIR}/02x03_cpp"
+
+    # Patch Makefile to include nlohmann/json and gmp paths
+    sed -i '' 's|CFLAGS=-std=c++11 -O3 -I.|CFLAGS=-std=c++11 -O3 -I. -I../../depends/json/single_include -I/opt/homebrew/include|' Makefile
+    sed -i '' 's|-lgmp|-L/opt/homebrew/lib -lgmp|' Makefile
+
+    make
+
+    if [ $? -ne 0 ]; then
+        echo "Error: C++ build failed"
+        exit 1
+    fi
+
+    cp 02x03 "${BUILD_DIR}/"
 fi
-
-# Check if make is available
-if ! command -v make &> /dev/null; then
-    echo "Error: make not found"
-    exit 1
-fi
-
-make
-
-if [ $? -ne 0 ]; then
-    echo "Error: C++ build failed"
-    exit 1
-fi
-
-# Copy executable to build directory
-cp 02x03 "${BUILD_DIR}/"
 
 echo ""
 echo "Build complete!"
