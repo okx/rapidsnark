@@ -41,7 +41,7 @@ git submodule update --init
 ## build with server mode
 ### macos_arm64
 ```
-sudo ./build_pistache.sh
+./build_pistache.sh
 
 mkdir -p build_prover_macos_arm64 && cd build_prover_macos_arm64
 cmake .. -DTARGET_PLATFORM=macos_arm64 \
@@ -70,6 +70,5 @@ mv zkeys/02x03_new.zkey zkeys/02x03.zkey
 
 ## run rapidsnark server
 ```
-<!-- export DYLD_LIBRARY_PATH=/usr/local/lib:$DYLD_LIBRARY_PATH -->
 /usr/local/bin/proverServer 8080 zkeys/02x03.zkey
 ```
