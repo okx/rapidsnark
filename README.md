@@ -3,6 +3,15 @@
 Rapidsnark is a zkSnark proof generation written in C++ and intel/arm assembly. That generates proofs created in [circom](https://github.com/iden3/snarkjs) and [snarkjs](https://github.com/iden3/circom) very fast.
 
 ## Dependencies
+### zk tools
+- install circom
+```
+git clone https://github.com/iden3/circom.git
+cd circom
+cargo build --release
+cargo install --path circom
+```
+
 ### dev tools
 
 You should have installed gcc, cmake, libsodium, and gmp (development)
@@ -48,8 +57,17 @@ cmake .. -DTARGET_PLATFORM=macos_arm64 \
 make -j4 && sudo make install
 ```
 
+## build circuits
+```
+curl -L -o powersOfTau28_hez_final_15.ptau https://storage.googleapis.com/zkevm/ptau/powersOfTau28_hez_final_15.ptau
+npx snarkjs groth16 setup build/02x03.r1cs powersOfTau28_hez_final_15.ptau zkeys/02x03_new.zkey
+npx snarkjs zkey export verificationkey zkeys/02x03_new.zkey zkeys/02x03.vkey.json
+mv zkeys/02x03.zkey zkeys/02x03_old.zkey
+mv zkeys/02x03_new.zkey zkeys/02x03.zkey
+```
+
 ## run rapidsnark server
 ```
-export DYLD_LIBRARY_PATH=/usr/local/lib:$DYLD_LIBRARY_PATH
-/usr/local/bin/proverServer 8080 ~/data/xlayer/privacy/02x03.zkey
+<!-- export DYLD_LIBRARY_PATH=/usr/local/lib:$DYLD_LIBRARY_PATH -->
+/usr/local/bin/proverServer 8080 zkeys/02x03.zkey
 ```
