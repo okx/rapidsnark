@@ -60,6 +60,7 @@ make -j4 && sudo make install
 ## build circuits
 ```
 curl -L -o powersOfTau28_hez_final_15.ptau https://storage.googleapis.com/zkevm/ptau/powersOfTau28_hez_final_15.ptau
+./build_circuit.sh
 npx snarkjs groth16 setup build/02x03.r1cs powersOfTau28_hez_final_15.ptau zkeys/02x03_new.zkey
 npx snarkjs zkey export verificationkey zkeys/02x03_new.zkey zkeys/02x03.vkey.json
 mv zkeys/02x03.zkey zkeys/02x03_old.zkey
