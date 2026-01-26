@@ -72,7 +72,7 @@ depends/gmp*
 
 build_*
 !build_pistache.sh
-
+!build_circuit.sh
 package*
 
 build/
