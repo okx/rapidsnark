@@ -55,11 +55,13 @@ cmake .. -DTARGET_PLATFORM=macos_arm64 \
            -DGMP_LIB_DIR=/opt/homebrew/lib \
            -DUSE_LOGGER=ON
 make -j4 && sudo make install
+cd ..
 ```
 
 ## build circuits
 ```
 curl -L -o powersOfTau28_hez_final_15.ptau https://storage.googleapis.com/zkevm/ptau/powersOfTau28_hez_final_15.ptau
+npm install
 ./build_circuit.sh
 npx snarkjs groth16 setup build/02x03.r1cs powersOfTau28_hez_final_15.ptau zkeys/02x03_new.zkey
 npx snarkjs zkey export verificationkey zkeys/02x03_new.zkey zkeys/02x03.vkey.json
