@@ -76,6 +76,20 @@ macos_x86_64:
 		cmake .. -DTARGET_PLATFORM=macos_x86_64 -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=../package_macos_x86_64 && \
 		make -j$(nproc) -vvv && make install
 
+prover-server:
+	@if [ "$$(uname -m)" = "arm64" ] && [ "$$(uname)" = "Darwin" ]; then \
+		rm -rf build_prover_server_macos_arm64 && mkdir -p build_prover_server_macos_arm64 && cd build_prover_server_macos_arm64 && \
+		cmake .. -DTARGET_PLATFORM=macos_arm64 -DBUILD_SERVER=ON -DLIB_EVENT_DIR=/opt/homebrew/opt/libevent/lib -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=../package -DUSE_OPENMP=ON -DLIB_OMP_PREFIX=/opt/homebrew/opt/libomp/ -DGMP_INCLUDE_DIR=/opt/homebrew/include -DGMP_LIB_DIR=/opt/homebrew/lib -DUSE_LOGGER=ON && \
+		make -j$$(sysctl -n hw.ncpu) && make install && cd ..; \
+	elif [ "$$(uname)" = "Linux" ]; then \
+		rm -rf build_prover_server_linux_x86_64 && mkdir build_prover_server_linux_x86_64 && cd build_prover_server_linux_x86_64 && \
+		cmake .. -DBUILD_SERVER=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=../package -DUSE_OPENMP=ON -DUSE_LOGGER=ON && \
+		make -j$$(nproc) -vvv && make install && cd ..; \
+	else \
+		echo "Unsupported platform for prover-server. Use 'make host' for Linux x86_64 standalone or 'make macos_arm64' for macOS arm64 standalone."; \
+		exit 1; \
+	fi
+
 clean:
 	rm -rf build_prover \
 		build_prover_macos_arm64 \
@@ -97,4 +111,7 @@ clean:
 		depends/gmp/package_android_arm64 \
 		depends/gmp/package_android_x86_64 \
 		depends/gmp/package_ios_arm64 \
-		depends/gmp/package_iphone_simulator
+		depends/gmp/package_iphone_simulator \
+		build/proverServer \
+		build_prover_server_macos_arm64 \
+		build_prover_server_linux_x86_64

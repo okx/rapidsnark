@@ -62,7 +62,7 @@ make host
 ```
 ./build_pistache.sh
 
-mkdir -p build_prover_macos_arm64 && cd build_prover_macos_arm64
+mkdir -p build_prover_server_macos_arm64 && cd build_prover_server_macos_arm64
 cmake .. -DTARGET_PLATFORM=macos_arm64 \
            -DBUILD_SERVER=ON \
            -DLIB_EVENT_DIR=/opt/homebrew/opt/libevent/lib \
@@ -73,8 +73,12 @@ cmake .. -DTARGET_PLATFORM=macos_arm64 \
            -DGMP_INCLUDE_DIR=/opt/homebrew/include \
            -DGMP_LIB_DIR=/opt/homebrew/lib \
            -DUSE_LOGGER=ON
-make -j4 && sudo make install
+make -j4 && make install
 cd ..
+```
+
+### x86_64
+```
 ```
 
 ## build circuits
