@@ -20,7 +20,11 @@ cmake -G "Unix Makefiles" \
     ${CMAKE_EXTRA_FLAGS} \
     ..
 
-make -j$(sysctl -n hw.ncpu)
+if [[ "$(uname)" == "Darwin" ]]; then
+    make -j$(sysctl -n hw.ncpu)
+else
+    make -j$(nproc)
+fi
 
 echo "Pistache built successfully at ${BUILD_DIR}/src/"
 echo "Static library: ${BUILD_DIR}/src/libpistache.a"

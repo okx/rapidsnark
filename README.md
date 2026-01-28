@@ -58,27 +58,14 @@ make host
 
 
 ## build with server mode
-### macos_arm64
 ```
 ./build_pistache.sh
-
-mkdir -p build_prover_server_macos_arm64 && cd build_prover_server_macos_arm64
-cmake .. -DTARGET_PLATFORM=macos_arm64 \
-           -DBUILD_SERVER=ON \
-           -DLIB_EVENT_DIR=/opt/homebrew/opt/libevent/lib \
-           -DCMAKE_BUILD_TYPE=Release \
-           -DCMAKE_INSTALL_PREFIX=/usr/local \
-           -DUSE_OPENMP=ON \
-           -DLIB_OMP_PREFIX=/opt/homebrew/opt/libomp/ \
-           -DGMP_INCLUDE_DIR=/opt/homebrew/include \
-           -DGMP_LIB_DIR=/opt/homebrew/lib \
-           -DUSE_LOGGER=ON
-make -j4 && make install
-cd ..
+make prover-server
 ```
 
-### x86_64
+### if want to test build in docker
 ```
+docker build --platform linux/arm64 -t rapidsnark-arm64 -f Dockerfile.arm64 .
 ```
 
 ## build circuits

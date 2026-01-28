@@ -81,6 +81,10 @@ prover-server:
 		rm -rf build_prover_server_macos_arm64 && mkdir -p build_prover_server_macos_arm64 && cd build_prover_server_macos_arm64 && \
 		cmake .. -DTARGET_PLATFORM=macos_arm64 -DBUILD_SERVER=ON -DLIB_EVENT_DIR=/opt/homebrew/opt/libevent/lib -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=../package -DUSE_OPENMP=ON -DLIB_OMP_PREFIX=/opt/homebrew/opt/libomp/ -DGMP_INCLUDE_DIR=/opt/homebrew/include -DGMP_LIB_DIR=/opt/homebrew/lib -DUSE_LOGGER=ON && \
 		make -j$$(sysctl -n hw.ncpu) && make install && cd ..; \
+	elif [ "$$(uname)" = "Linux" ] && [ "$$(uname -m)" = "aarch64" ]; then \
+		rm -rf build_prover_server_linux_arm64 && mkdir build_prover_server_linux_arm64 && cd build_prover_server_linux_arm64 && \
+		cmake .. -DTARGET_PLATFORM=aarch64 -DBUILD_SERVER=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=../package -DUSE_OPENMP=ON -DUSE_LOGGER=ON && \
+		make -j$$(nproc) -vvv && make install && cd ..; \
 	elif [ "$$(uname)" = "Linux" ]; then \
 		rm -rf build_prover_server_linux_x86_64 && mkdir build_prover_server_linux_x86_64 && cd build_prover_server_linux_x86_64 && \
 		cmake .. -DBUILD_SERVER=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=../package -DUSE_OPENMP=ON -DUSE_LOGGER=ON && \
@@ -114,4 +118,5 @@ clean:
 		depends/gmp/package_iphone_simulator \
 		build/proverServer \
 		build_prover_server_macos_arm64 \
-		build_prover_server_linux_x86_64
+		build_prover_server_linux_x86_64 \
+		build_prover_server_linux_arm64
