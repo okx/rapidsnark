@@ -3,7 +3,7 @@
 set -e
 
 NPROC=8
-fetch_cmd=$( (type wget > /dev/null 2>&1 && echo "wget") || echo "curl -O" )
+fetch_cmd=$( (type wget > /dev/null 2>&1 && echo "wget --tries=1 --timeout=30 --connect-timeout=10") || echo "curl -L -O --connect-timeout 10 --max-time 120 --retry 0" )
 
 usage()
 {
@@ -25,18 +25,59 @@ usage()
 
 get_gmp()
 {
-    GMP_NAME=gmp-6.2.1
+    GMP_NAME=gmp-6.3.0
     GMP_ARCHIVE=${GMP_NAME}.tar.xz
-    GMP_URL=https://ftp.gnu.org/gnu/gmp/${GMP_ARCHIVE}
+    GMP_SHA256="a3c2b80201b89e68616f4ad30bc66aee4927c3ce50e33929ca819d5c43538898"
+    GMP_MIRRORS=(
+        "https://ftpmirror.gnu.org/gmp/${GMP_ARCHIVE}"
+        "https://gmplib.org/download/gmp/${GMP_ARCHIVE}"
+        "https://ftp.gnu.org/gnu/gmp/${GMP_ARCHIVE}"
+    )
+
+    verify_checksum()
+    {
+        if command -v sha256sum > /dev/null 2>&1; then
+            echo "${GMP_SHA256}  ${GMP_ARCHIVE}" | sha256sum -c -
+        elif command -v shasum > /dev/null 2>&1; then
+            echo "${GMP_SHA256}  ${GMP_ARCHIVE}" | shasum -a 256 -c -
+        else
+            echo "WARNING: No sha256sum or shasum found, skipping checksum verification"
+            return 0
+        fi
+    }
 
     if [ ! -f ${GMP_ARCHIVE} ]; then
+        for url in "${GMP_MIRRORS[@]}"; do
+            echo "Attempting to download from: $url"
+            set +e
+            $fetch_cmd "$url"
+            exit_code=$?
+            set -e
 
-        $fetch_cmd ${GMP_URL}
+            if [ $exit_code -eq 0 ]; then
+                echo "Successfully downloaded from: $url"
+                break
+            else
+                echo "Failed to download from: $url"
+                rm -f ${GMP_ARCHIVE}
+            fi
+        done
+
+        if [ ! -f ${GMP_ARCHIVE} ]; then
+            echo "ERROR: Failed to download GMP from all mirrors"
+            exit 1
+        fi
     fi
 
+    echo "Verifying checksum..."
+    if ! verify_checksum; then
+        echo "ERROR: Checksum verification failed for ${GMP_ARCHIVE}"
+        rm -f ${GMP_ARCHIVE}
+        exit 1
+    fi
+    echo "Checksum verified successfully"
 
     if [ ! -d gmp ]; then
-
         tar -xvf ${GMP_ARCHIVE}
         mv ${GMP_NAME} gmp
     fi
@@ -82,7 +123,13 @@ build_host()
     mkdir "$BUILD_DIR"
     cd "$BUILD_DIR"
 
-    ../configure --prefix="$PACKAGE_DIR" --with-pic --disable-fft &&
+    # Although the target is named `host`, we still assume that if we build on
+    # linux x86_64, the binary should work on any linux x86_64. That is why we
+    # add the --enable-fat flag. Without it, for example, if we cache the build
+    # artifacts of GMP that were built on one GitHub CI server, we would get a
+    # crash on another server that does not support instructions from the
+    # original builder.
+    ../configure --prefix="$PACKAGE_DIR" --with-pic --disable-fft --enable-fat &&
     make -j${NPROC} &&
     make install
 
@@ -128,7 +175,11 @@ build_android()
         return 1
     fi
 
-    export TOOLCHAIN=$ANDROID_NDK/toolchains/llvm/prebuilt/linux-x86_64
+    if [ "$(uname)" == "Darwin" ]; then
+        export TOOLCHAIN=$ANDROID_NDK/toolchains/llvm/prebuilt/darwin-x86_64
+    else
+        export TOOLCHAIN=$ANDROID_NDK/toolchains/llvm/prebuilt/linux-x86_64
+    fi
 
     export TARGET=aarch64-linux-android
     export API=21
@@ -173,7 +224,11 @@ build_android_x86_64()
         return 1
     fi
 
-    export TOOLCHAIN=$ANDROID_NDK/toolchains/llvm/prebuilt/linux-x86_64
+    if [ "$(uname)" == "Darwin" ]; then
+        export TOOLCHAIN=$ANDROID_NDK/toolchains/llvm/prebuilt/darwin-x86_64
+    else
+        export TOOLCHAIN=$ANDROID_NDK/toolchains/llvm/prebuilt/linux-x86_64
+    fi
 
     export TARGET=x86_64-linux-android
     export API=21
@@ -215,7 +270,7 @@ build_ios()
     export MIN_IOS_VERSION=8.0
 
     export ARCH_FLAGS="-arch arm64 -arch arm64e"
-    export OPT_FLAGS="-O3 -g3 -fembed-bitcode"
+    export OPT_FLAGS="-O3 -g3"
     HOST_FLAGS="${ARCH_FLAGS} -miphoneos-version-min=${MIN_IOS_VERSION} -isysroot $(xcrun --sdk ${SDK} --show-sdk-path)"
 
     CC=$(xcrun --find --sdk "${SDK}" clang)
@@ -314,9 +369,10 @@ build_macos_arch()
   cd "$BUILD_DIR"
   ../configure --prefix="${PACKAGE_DIR}" \
          CC="$(xcrun --sdk macosx --find clang)" \
+         CPP_FOR_BUILD="$(xcrun --sdk macosx --find clang) -E" \
          CFLAGS="-O3 -isysroot $(xcrun --sdk macosx --show-sdk-path) ${ARCH_FLAGS} -fvisibility=hidden -mmacos-version-min=14.0" \
          LDFLAGS="" \
-         --host "${ARCH}-apple-darwin" --disable-assembly --enable-static --disable-shared --with-pic &&
+         --host "${ARCH}-apple-darwin" --enable-static --disable-shared --with-pic &&
     make -j${NPROC} &&
     make install
   cd ..

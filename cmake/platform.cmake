@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.10)
 
 string(TOLOWER "${TARGET_PLATFORM}" TARGET_PLATFORM)
 
@@ -32,6 +32,10 @@ if(TARGET_PLATFORM MATCHES "android")
 
     message("CMAKE_ANDROID_ARCH_ABI=" ${CMAKE_ANDROID_ARCH_ABI})
 
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-z,max-page-size=16384")
+    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,-z,max-page-size=16384")
+    message("Android ELF page alignment set to 16k")
+
 elseif(TARGET_PLATFORM MATCHES "ios")
 
     set(CMAKE_SYSTEM_NAME iOS)
@@ -39,6 +43,10 @@ elseif(TARGET_PLATFORM MATCHES "ios")
     if(TARGET_PLATFORM MATCHES "ios_x86_64")
         set(CMAKE_OSX_ARCHITECTURES x86_64)
         set(GMP_PREFIX ${GMP_ROOT}/package_ios_x86_64)
+        set(ARCH x86_64)
+    elseif(TARGET_PLATFORM MATCHES "ios_simulator")
+        set(CMAKE_OSX_ARCHITECTURES arm64)
+        set(GMP_PREFIX ${GMP_ROOT}/package_iphone_simulator_arm64)
         set(ARCH x86_64)
     else()
         set(CMAKE_OSX_ARCHITECTURES arm64)
@@ -49,11 +57,6 @@ elseif(TARGET_PLATFORM MATCHES "ios")
 elseif(TARGET_PLATFORM MATCHES "aarch64")
 
     set(GMP_PREFIX ${GMP_ROOT}/package_aarch64)
-    set(ARCH arm64)
-
-elseif(TARGET_PLATFORM MATCHES "arm64_host")
-
-    set(GMP_PREFIX ${GMP_ROOT}/package)
     set(ARCH arm64)
 
 elseif(TARGET_PLATFORM MATCHES "macos_x86_64")
@@ -75,7 +78,7 @@ else()
 
 endif()
 
-if (CMAKE_HOST_SYSTEM_NAME MATCHES "Darwin")
+if (CMAKE_HOST_SYSTEM_NAME MATCHES "Darwin" AND NOT TARGET_PLATFORM MATCHES "^android(_x86_64)?")
     set(GMP_DEFINIONS -D_LONG_LONG_LIMB)
 endif()
 

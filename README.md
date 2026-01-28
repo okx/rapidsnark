@@ -1,16 +1,26 @@
+## Important note 
+
+**This is a new implementation of rapidsnark. The original (and now obsoleted) implementation is available here: [rapidsnark-old](https://github.com/iden3/rapidsnark-old).**
+
 # rapidsnark
 
-Rapidsnark is a zkSnark proof generation written in C++ and intel/arm assembly. That generates proofs created in [circom](https://github.com/iden3/snarkjs) and [snarkjs](https://github.com/iden3/circom) very fast.
+Rapidsnark is a fast zkSnark proof generator written in C++ and Intel/ARM assembly. It generates proofs for circuits created with [circom](https://github.com/iden3/circom) and [snarkjs](https://github.com/iden3/snarkjs).
 
 ## Dependencies
 ### dev tools
 
-You should have installed gcc, cmake, libsodium, and gmp (development)
+Install gcc, cmake, libsodium, and gmp (development libraries).
 
 - On ubuntu:
 
 ```
 sudo apt-get install build-essential cmake libgmp-dev libsodium-dev nasm curl m4
+```
+
+On MacOS:
+
+```
+brew install cmake gmp libsodium nasm
 ```
 - On mac
 ```

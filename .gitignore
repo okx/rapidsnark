@@ -78,6 +78,7 @@ package*
 build/
 
 .idea/
+<<<<<<< HEAD
 build/CMakeFiles
 build/src
 build/cmake_install.cmake
@@ -86,3 +87,6 @@ build/Makefile
 build/*.txt
 
 .vscode/
+=======
+.vscode/
+>>>>>>> upstream/main

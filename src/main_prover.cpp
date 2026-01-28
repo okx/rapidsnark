@@ -1,9 +1,10 @@
 #include <iostream>
 #include <fstream>
+#include <string>
+#include <vector>
 #include <stdexcept>
-
-#include "fileloader.hpp"
 #include "prover.h"
+<<<<<<< HEAD
 #include "logger.hpp"
 
 using namespace CPlusPlusLogging;
@@ -13,13 +14,16 @@ using namespace CPlusPlusLogging;
 
 const size_t BufferSize = 16384;
 
+=======
+#include "fileloader.hpp"
+>>>>>>> upstream/main
 
 
 int main(int argc, char **argv)
 {
     if (argc != 5) {
-        std::cerr << "Invalid number of parameters:\n";
-        std::cerr << "Usage: prover <circuit.zkey> <witness.wtns> <proof.json> <public.json>\n";
+        std::cerr << "Invalid number of parameters" << std::endl;
+        std::cerr << "Usage: prover <circuit.zkey> <witness.wtns> <proof.json> <public.json>" << std::endl;
         return EXIT_FAILURE;
     }
 
@@ -33,55 +37,61 @@ int main(int argc, char **argv)
     #endif
 
     try {
-        std::string zkeyFilename = argv[1];
-        std::string wtnsFilename = argv[2];
-        std::string proofFilename = argv[3];
-        std::string publicFilename = argv[4];
+        const std::string zkeyFilename = argv[1];
+        const std::string wtnsFilename = argv[2];
+        const std::string proofFilename = argv[3];
+        const std::string publicFilename = argv[4];
 
-        char proofBuffer[BufferSize];
-        char publicBuffer[BufferSize];
-        size_t proofSize  = sizeof(proofBuffer);
-        size_t publicSize = sizeof(publicBuffer);
-        char errorMessage[256];
-        int error = 0;
+        BinFileUtils::FileLoader zkeyFile(zkeyFilename);
+        BinFileUtils::FileLoader wtnsFile(wtnsFilename);
+        std::vector<char>        publicBuffer;
+        std::vector<char>        proofBuffer;
+        unsigned long long       publicSize = 0;
+        unsigned long long       proofSize = 0;
+        char                     errorMsg[1024];
 
-        BinFileUtils::FileLoader zkeyFileLoader(zkeyFilename);
-        BinFileUtils::FileLoader wtnsFileLoader(wtnsFilename);
+        int error = groth16_public_size_for_zkey_buf(
+                     zkeyFile.dataBuffer(),
+                     zkeyFile.dataSize(),
+                     &publicSize,
+                     errorMsg,
+                     sizeof(errorMsg));
 
-        error = groth16_prover(zkeyFileLoader.dataBuffer(), zkeyFileLoader.dataSize(),
-                               wtnsFileLoader.dataBuffer(), wtnsFileLoader.dataSize(),
-                               proofBuffer,  &proofSize,
-                               publicBuffer, &publicSize,
-                               errorMessage, sizeof(errorMessage));
-
-        if (error == PPROVER_ERROR_SHORT_BUFFER) {
-
-            std::cerr << "Error: Short buffer for proof or public" << '\n';
-            return EXIT_FAILURE;
+        if (error != PROVER_OK) {
+            throw std::runtime_error(errorMsg);
         }
 
-        else if (error) {
-            std::cerr << errorMessage << '\n';
-            return EXIT_FAILURE;
+        groth16_proof_size(&proofSize);
+
+        publicBuffer.resize(publicSize);
+        proofBuffer.resize(proofSize);
+
+        error = groth16_prover(
+                   zkeyFile.dataBuffer(),
+                   zkeyFile.dataSize(),
+                   wtnsFile.dataBuffer(),
+                   wtnsFile.dataSize(),
+                   proofBuffer.data(),
+                   &proofSize,
+                   publicBuffer.data(),
+                   &publicSize,
+                   errorMsg,
+                   sizeof(errorMsg));
+
+        if (error != PROVER_OK) {
+            throw std::runtime_error(errorMsg);
         }
 
-        std::ofstream proofFile;
-        proofFile.open (proofFilename);
-        proofFile << proofBuffer;
-        proofFile.close();
+        std::ofstream proofFile(proofFilename);
+        proofFile.write(proofBuffer.data(), proofSize);
 
-        std::ofstream publicFile;
-        publicFile.open (publicFilename);
-        publicFile << publicBuffer;
-        publicFile.close();
-
-    } catch (std::exception* e) {
-        std::cerr << e->what() << '\n';
-        return EXIT_FAILURE;
+        std::ofstream publicFile(publicFilename);
+        publicFile.write(publicBuffer.data(), publicSize);
 
     } catch (std::exception& e) {
-        std::cerr << e.what() << '\n';
+        std::cerr << "Error: " << e.what() << std::endl;
         return EXIT_FAILURE;
+
     }
 
     exit(EXIT_SUCCESS);
