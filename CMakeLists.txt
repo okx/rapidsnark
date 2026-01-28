@@ -4,6 +4,7 @@ include(cmake/platform.cmake)
 
 set(USE_ASM    ON CACHE BOOL "Use asm implementation for Fr and Fq")
 set(USE_OPENMP ON CACHE BOOL "Use OpenMP")
+set(BUILD_SERVER OFF CACHE BOOL "Build Server mode")
 
 project(rapidsnark LANGUAGES CXX C ASM)
 
@@ -11,6 +12,7 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 message("BITS_PER_CHUNK=" ${BITS_PER_CHUNK})
+message("TARGET_PLATFORM=" ${TARGET_PLATFORM})
 message("USE_ASM=" ${USE_ASM})
 message("USE_OPENMP=" ${USE_OPENMP})
 message("CMAKE_CROSSCOMPILING=" ${CMAKE_CROSSCOMPILING})
@@ -18,6 +20,8 @@ message("CMAKE_CROSSCOMPILING=" ${CMAKE_CROSSCOMPILING})
 message("GMP_PREFIX=" ${GMP_PREFIX})
 message("GMP_INCLUDE_DIR=" ${GMP_INCLUDE_DIR})
 message("GMP_LIB_DIR=" ${GMP_LIB_DIR})
+
+message("LIB_OMP_PREFIX=" ${LIB_OMP_PREFIX})
 
 if (NOT EXISTS ${GMP_INCLUDE_FILE_FULLPATH})
     message("WARNING: ${GMP_INCLUDE_FILE_FULLPATH} is not found and so system ${GMP_INCLUDE_FILE} is used.")
@@ -28,10 +32,6 @@ if (NOT EXISTS ${GMP_LIB_FILE_FULLPATH})
     set(GMP_LIB gmp)
 endif()
 
-
-include_directories(BEFORE ${GMP_INCLUDE_DIR})
-
-
 if(USE_OPENMP)
     find_package(OpenMP)
 
@@ -41,28 +41,32 @@ if(USE_OPENMP)
 
         elseif(CMAKE_HOST_SYSTEM_NAME STREQUAL "Linux")
             message("OpenMP is used")
-
         else()
-            set(OpenMP_CXX_FOUND FALSE)
+            set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
             message("OpenMP is not used")
 
         endif()
     endif()
 endif()
 
-
 add_subdirectory(src)
 
-
-install(TARGETS prover verifier rapidsnark rapidsnarkStatic rapidsnarkStaticFrFq test_prover fr fq
+if(BUILD_SERVER)
+    install(TARGETS proverServer prover test_prover rapidsnark fr fq
     RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin
     BUNDLE DESTINATION ${CMAKE_INSTALL_PREFIX}/app
     LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
+else()
+    install(TARGETS prover test_prover rapidsnark fr fq
+    RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin
+    BUNDLE DESTINATION ${CMAKE_INSTALL_PREFIX}/app
+    LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
+endif()
 
 install(FILES "${GMP_LIB_DIR}/${GMP_LIB_FILE}"
     DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
 
-install(FILES src/prover.h src/verifier.h
+install(FILES src/prover.h
     DESTINATION ${CMAKE_INSTALL_PREFIX}/include)
 
 enable_testing()
