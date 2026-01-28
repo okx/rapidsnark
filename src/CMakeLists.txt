@@ -48,6 +48,7 @@ endif()
 
 add_library(fr STATIC ${FR_SOURCES})
 set_target_properties(fr PROPERTIES POSITION_INDEPENDENT_CODE ON)
+target_include_directories(fr PUBLIC ${CMAKE_SOURCE_DIR}/${GMP_INCLUDE_DIR})
 
 link_libraries(fr)
 
@@ -68,6 +69,7 @@ endif()
 
 add_library(fq STATIC ${FQ_SOURCES})
 set_target_properties(fq PROPERTIES POSITION_INDEPENDENT_CODE ON)
+target_include_directories(fq PUBLIC ${CMAKE_SOURCE_DIR}/${GMP_INCLUDE_DIR})
 
 link_libraries(fq)
 
