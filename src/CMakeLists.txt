@@ -154,7 +154,7 @@ add_executable(
     main_prover.cpp
 )
 
-target_link_libraries(prover rapidsnark)
+target_link_libraries(prover rapidsnarkStatic)
 if(OpenMP_CXX_FOUND)
     if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Linux")
         target_link_libraries(prover OpenMP::OpenMP_CXX)
