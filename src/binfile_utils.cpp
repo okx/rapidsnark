@@ -6,15 +6,12 @@
 #include <string>
 #include <memory.h>
 #include <stdexcept>
+
 #include "binfile_utils.hpp"
 #include "fileloader.hpp"
-#include "logger.hpp"
 
-using namespace CPlusPlusLogging;
 namespace BinFileUtils {
 
-<<<<<<< HEAD
-=======
 BinFile::BinFile(const std::string& fileName, const std::string& _type, uint32_t maxVersion)
     : fileLoader(fileName)
 {
@@ -23,18 +20,11 @@ BinFile::BinFile(const std::string& fileName, const std::string& _type, uint32_t
 
     readFileData(_type, maxVersion);
 }
->>>>>>> upstream/main
 
 BinFile::BinFile(const void *fileData, size_t fileSize, std::string _type, uint32_t maxVersion) {
 
     addr = fileData;
     size = fileSize;
-<<<<<<< HEAD
-    addr = malloc(size);
-    LOG_DEBUG(("start memcopy file: " + _type).c_str());
-    memcpy(addr, fileData, size);
-    LOG_DEBUG(("end memcopy file: " + _type).c_str());
-=======
 
     readFileData(_type, maxVersion);
 }
@@ -48,7 +38,6 @@ void BinFile::readFileData(std::string _type, uint32_t maxVersion) {
         throw std::range_error("File is too short.");
     }
 
->>>>>>> upstream/main
     type.assign((const char *)addr, 4);
     pos = 4;
 
@@ -186,4 +175,3 @@ std::unique_ptr<BinFile> openExisting(const std::string& filename, const std::st
 }
 
 } // Namespace
-

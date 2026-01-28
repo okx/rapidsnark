@@ -15,10 +15,5 @@ cmake -G "Unix Makefiles" \
 
 make -j$(sysctl -n hw.ncpu)
 
-# Install library to /usr/local/lib
-sudo cp -P "${BUILD_DIR}/src/libpistache"*.dylib /usr/local/lib/
-sudo cp -P "${BUILD_DIR}/src/libpistache.a" /usr/local/lib/
-
-# Install headers to /usr/local/include
-sudo mkdir -p /usr/local/include/pistache
-sudo cp -R "${PISTACHE_DIR}/include/pistache/"* /usr/local/include/pistache/
+echo "Pistache built successfully at ${BUILD_DIR}/src/"
+echo "Static library: ${BUILD_DIR}/src/libpistache.a"

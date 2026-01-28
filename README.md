@@ -7,6 +7,15 @@
 Rapidsnark is a fast zkSnark proof generator written in C++ and Intel/ARM assembly. It generates proofs for circuits created with [circom](https://github.com/iden3/circom) and [snarkjs](https://github.com/iden3/snarkjs).
 
 ## Dependencies
+### zk tools
+- install circom
+```
+git clone https://github.com/iden3/circom.git
+cd circom
+cargo build --release
+cargo install --path circom
+```
+
 ### dev tools
 
 Install gcc, cmake, libsodium, and gmp (development libraries).
@@ -26,6 +35,7 @@ brew install cmake gmp libsodium nasm
 ```
 brew install gmp # install dependencies
 brew install libomp
+brew install nasm
 brew install libevent # for server
 ```
 
@@ -38,10 +48,19 @@ brew install libevent # for server
 git submodule update --init
 ```
 
+## build in standalone mode
+### x86_64
+```
+git submodule update --init --recursive
+./build_gmp.sh host
+make host
+```
+
+
 ## build with server mode
 ### macos_arm64
 ```
-sudo ./build_pistache.sh
+./build_pistache.sh
 
 mkdir -p build_prover_macos_arm64 && cd build_prover_macos_arm64
 cmake .. -DTARGET_PLATFORM=macos_arm64 \
@@ -55,10 +74,20 @@ cmake .. -DTARGET_PLATFORM=macos_arm64 \
            -DGMP_LIB_DIR=/opt/homebrew/lib \
            -DUSE_LOGGER=ON
 make -j4 && sudo make install
+cd ..
+```
+
+## build circuits
+```
+curl -L -o powersOfTau28_hez_final_15.ptau https://storage.googleapis.com/zkevm/ptau/powersOfTau28_hez_final_15.ptau
+npm install
+./build_circuit.sh
+npx snarkjs groth16 setup build/02x03.r1cs powersOfTau28_hez_final_15.ptau zkeys/02x03_new.zkey
+npx snarkjs zkey export verificationkey zkeys/02x03_new.zkey zkeys/02x03.vkey.json
+mv zkeys/02x03_new.zkey zkeys/02x03.zkey
 ```
 
 ## run rapidsnark server
 ```
-export DYLD_LIBRARY_PATH=/usr/local/lib:$DYLD_LIBRARY_PATH
-/usr/local/bin/proverServer 8080 ~/data/xlayer/privacy/02x03.zkey
+/usr/local/bin/proverServer 8080 zkeys/02x03.zkey
 ```

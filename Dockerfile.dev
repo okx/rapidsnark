@@ -1,0 +1,17 @@
+FROM --platform=linux/amd64 ubuntu:22.04
+
+ARG DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    cmake \
+    ca-certificates \
+    libgmp-dev \
+    libsodium-dev \
+    nasm \
+    curl \
+    m4 \
+  && update-ca-certificates \
+  && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /workspace
