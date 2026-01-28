@@ -127,10 +127,27 @@ endif()
 
 add_library(rapidsnarkStatic STATIC ${LIB_SOURCES})
 set_target_properties(rapidsnarkStatic PROPERTIES OUTPUT_NAME rapidsnark)
+target_include_directories(
+    rapidsnarkStatic
+    PUBLIC
+    ../src
+    ../build
+    ../depends/ffiasm/c
+    ../depends/json/single_include
+)
 
 add_library(rapidsnarkStaticFrFq STATIC ${LIB_SOURCES} ${FQ_SOURCES} ${FR_SOURCES})
 set_target_properties(rapidsnarkStaticFrFq PROPERTIES POSITION_INDEPENDENT_CODE ON)
 set_target_properties(rapidsnarkStaticFrFq PROPERTIES OUTPUT_NAME rapidsnark-fr-fq)
+target_include_directories(
+    rapidsnarkStaticFrFq
+    PUBLIC
+    ../src
+    ../build
+    ../depends/ffiasm/c
+    ../depends/json/single_include
+    ${CMAKE_SOURCE_DIR}/${GMP_INCLUDE_DIR}
+)
 
 add_executable(
     prover
