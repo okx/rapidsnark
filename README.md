@@ -48,6 +48,15 @@ brew install libevent # for server
 git submodule update --init
 ```
 
+## build in standalone mode
+### x86_64
+```
+git submodule update --init --recursive
+./build_gmp.sh host
+make host
+```
+
+
 ## build with server mode
 ### macos_arm64
 ```
