@@ -42,35 +42,37 @@ fi
 
 echo "Circuit compiled successfully"
 
-# For ARM64 (Apple Silicon), skip C++ build and use WASM wrapper
-if [ "$(uname -m)" = "arm64" ]; then
-    echo "Detected ARM64, creating WASM-based witness generator wrapper..."
+# Build C++ witness generator
+echo "Building C++ witness generator..."
+cd "${BUILD_DIR}/02x03_cpp"
+
+# Patch Makefile for include and lib paths
+if [[ "$(uname)" == "Darwin" ]]; then
+    # macOS (both ARM64 and x86_64)
+    sed -i '' 's|CFLAGS=-std=c++11 -O3 -I.|CFLAGS=-std=c++11 -O3 -I. -I../../depends/json/single_include -I/opt/homebrew/include -I/usr/local/include|' Makefile
+    sed -i '' 's|-lgmp|-L/opt/homebrew/lib -L/usr/local/lib -lgmp|' Makefile
+else
+    # Linux
+    sed -i 's|CFLAGS=-std=c++11 -O3 -I.|CFLAGS=-std=c++11 -O3 -I. -I../../depends/json/single_include|' Makefile
+fi
+
+make
+
+if [ $? -ne 0 ]; then
+    echo "Error: C++ build failed, falling back to WASM wrapper..."
+    cd "$SCRIPT_DIR"
     cat > "${BUILD_DIR}/02x03" << 'WRAPPER'
 #!/bin/bash
-# WASM-based witness generator wrapper for ARM64 compatibility
+# WASM-based witness generator wrapper (fallback)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WASM_FILE="${SCRIPT_DIR}/02x03_js/02x03.wasm"
+WITNESS_JS="${SCRIPT_DIR}/02x03_js/generate_witness.js"
 INPUT_FILE="$1"
 WITNESS_FILE="$2"
-npx snarkjs wtns calculate "$WASM_FILE" "$INPUT_FILE" "$WITNESS_FILE"
+node "$WITNESS_JS" "$WASM_FILE" "$INPUT_FILE" "$WITNESS_FILE"
 WRAPPER
     chmod +x "${BUILD_DIR}/02x03"
 else
-    # Build C++ witness generator for x86_64
-    echo "Building C++ witness generator..."
-    cd "${BUILD_DIR}/02x03_cpp"
-
-    # Patch Makefile to include nlohmann/json and gmp paths
-    sed -i '' 's|CFLAGS=-std=c++11 -O3 -I.|CFLAGS=-std=c++11 -O3 -I. -I../../depends/json/single_include -I/opt/homebrew/include|' Makefile
-    sed -i '' 's|-lgmp|-L/opt/homebrew/lib -lgmp|' Makefile
-
-    make
-
-    if [ $? -ne 0 ]; then
-        echo "Error: C++ build failed"
-        exit 1
-    fi
-
     cp 02x03 "${BUILD_DIR}/"
 fi
 
