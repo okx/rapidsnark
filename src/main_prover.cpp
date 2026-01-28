@@ -4,20 +4,7 @@
 #include <vector>
 #include <stdexcept>
 #include "prover.h"
-<<<<<<< HEAD
-#include "logger.hpp"
-
-using namespace CPlusPlusLogging;
-#define handle_error(msg) \
-           do { perror(msg); exit(EXIT_FAILURE); } while (0)
-
-
-const size_t BufferSize = 16384;
-
-=======
 #include "fileloader.hpp"
->>>>>>> upstream/main
-
 
 int main(int argc, char **argv)
 {
@@ -26,15 +13,6 @@ int main(int argc, char **argv)
         std::cerr << "Usage: prover <circuit.zkey> <witness.wtns> <proof.json> <public.json>" << std::endl;
         return EXIT_FAILURE;
     }
-
-    Logger::getInstance()->enableConsoleLogging();
-    Logger::getInstance()->updateLogLevel(LOG_LEVEL_DEBUG);
-    Logger::getInstance()->enableFileLogging();
-    #if defined(USE_CUDA)
-        LOG_INFO("start run prover in standalone mode, with GPU support ...");
-    #else
-        LOG_INFO("start run prover in standalone mode...");
-    #endif
 
     try {
         const std::string zkeyFilename = argv[1];
