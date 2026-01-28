@@ -219,8 +219,8 @@ if(BUILD_SERVER)
     target_include_directories(proverServer PRIVATE ../depends/pistache/build/src)
 
     if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Darwin")
-        # Use static pistache library to avoid runtime dylib dependency
-        target_link_libraries(proverServer rapidsnark ${CMAKE_SOURCE_DIR}/depends/pistache/build/src/libpistache.a ${LIB_EVENT_DIR}/libevent.a ${LIB_EVENT_DIR}/libevent_pthreads.a pthread)
+        # Use static libraries to avoid runtime dylib dependencies
+        target_link_libraries(proverServer rapidsnarkStaticFrFq ${CMAKE_SOURCE_DIR}/depends/pistache/build/src/libpistache.a ${LIB_EVENT_DIR}/libevent.a ${LIB_EVENT_DIR}/libevent_pthreads.a pthread)
     elseif(CMAKE_HOST_SYSTEM_NAME STREQUAL "Linux")
         message("BUILD prover server for LINUX")
         target_link_directories(proverServer PRIVATE ${CMAKE_SOURCE_DIR}/depends/pistache/build/src)
