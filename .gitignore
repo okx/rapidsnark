@@ -78,6 +78,7 @@ package*
 build/
 
 .idea/
+<<<<<<< HEAD
 build/CMakeFiles
 build/src
 build/cmake_install.cmake
@@ -96,3 +97,6 @@ zkeys/*_old.zkey
 
 # Generated witness files
 *.wtns
+=======
+.vscode/
+>>>>>>> upstream/main

@@ -9,8 +9,9 @@ on:
   pull_request:
 
 jobs:
-  build-linux:
-    runs-on: ubuntu-22.04
+
+  build-linux-x86_64:
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
         with:
@@ -20,168 +21,350 @@ jobs:
         uses: awalsh128/cache-apt-pkgs-action@v1
         with:
           packages: build-essential cmake m4 nasm
-          version: 1.0
+          version: x86_64-1.0
 
       - name: Cache gmp build
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             depends/gmp
-            depends/gmp-6.2.1.tar.xz
-          key: ${{ runner.os }}-gmp-${{ hashFiles('build_gmp.sh') }}-2
+            depends/gmp-6.3.0.tar.xz
+          key: ${{ runner.os }}-${{ runner.arch }}-gmp-${{ hashFiles('build_gmp.sh') }}
 
-      - name: build gmp android arm64
+      - name: Build gmp for Android arm64
         run: if [[ ! -d "depends/gmp/package_android_arm64" ]]; then ./build_gmp.sh android; fi
 
-      - name: build gmp android x86_64
+      - name: Build gmp for Android x86_64
         run: if [[ ! -d "depends/gmp/package_android_x86_64" ]]; then ./build_gmp.sh android_x86_64; fi
 
-      - name: build gmp android x86_64
+      - name: Build gmp for Linux x86_64
         run: if [[ ! -d "depends/gmp/package" ]]; then ./build_gmp.sh host; fi
 
       - name: Build prover Android ARM64
         run: |
-          mkdir build_prover_android && cd build_prover_android
-          cmake .. -DTARGET_PLATFORM=ANDROID -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=../package_android
-          make -j4 && make install
+          make android
+
+      - name: Build prover Android ARM64 with OpenMP
+        run: |
+          make android_openmp
 
       - name: Build prover Android x86_64
         run: |
-          mkdir build_prover_android_x86_64 && cd build_prover_android_x86_64
-          cmake .. -DTARGET_PLATFORM=ANDROID_x86_64 -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=../package_android_x86_64
-          make -j4 && make install
+          make android_x86_64
 
-      - name: Build prover Linux
+      - name: Build prover Android x86_64 with OpenMP
         run: |
-          mkdir build_prover && cd build_prover
-          cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=../package
-          make -j4 && make install
+          make android_openmp_x86_64
 
-      - name: upload Android ARM64 artifacts
+      - name: Build prover Linux x86_64
+        run: |
+          make host
+          ctest --rerun-failed --output-on-failure
+
+      - name: Build prover Linux x86_64 noasm
+        run: |
+          make host_noasm
+          ctest --rerun-failed --output-on-failure
+
+      - name: Test rapidsnark
+        run: |
+          set -x
+          set -e
+          # To debug the `invalid instruction` crash, we can uncomment this
+          # code to see the state of the process during the crash.
+          # IMPORTANT: don't forget to install gdb before uncommenting
+          #
+          # cat /proc/cpuinfo
+          # gdb -q --batch -ex "set disassembly-flavor intel" \
+          #   -ex "run" \
+          #   -ex "bt" \
+          #   -ex "info registers" \
+          #   -ex "x/10i \$pc" \
+          #   --args package/bin/prover testdata/circuit_final.zkey testdata/witness.wtns proof.json public.json
+          time package/bin/prover testdata/circuit_final.zkey testdata/witness.wtns proof.json public.json
+          time package/bin/verifier testdata/verification_key.json public.json proof.json
+          # make a wrong public.json by decrementing the first element by 1
+          (value_0=$(jq '.[0]' public.json | tr -d '"') && value_0=$(echo "$value_0 - 1" | BC_LINE_LENGTH=100 bc) && jq --arg value_0 "$value_0" '.[0] = $value_0' public.json) > public_bad.json
+          set +e
+          time package/bin/verifier testdata/verification_key.json public_bad.json proof.json
+          exit_code=$?
+          set -e
+          [ $exit_code -ne 0 ]
+
+      - name: Upload Linux x86_64 dev artifacts
+        if: github.event_name != 'release'
+        uses: actions/upload-artifact@v4
+        with:
+          name: rapidsnark-linux-x86_64
+          path: |
+            package
+          if-no-files-found: error
+
+      - name: Upload Linux x86_64 noasm dev artifacts
+        if: github.event_name != 'release'
+        uses: actions/upload-artifact@v4
+        with:
+          name: rapidsnark-linux-x86_64-noasm
+          path: |
+            package_noasm
+          if-no-files-found: error
+
+      - name: Upload Android dev artifacts
+        if: github.event_name != 'release'
+        uses: actions/upload-artifact@v4
+        with:
+          name: rapidsnark-Android
+          path: |
+            package_android
+          if-no-files-found: error
+
+      - name: Upload Android dev artifacts
+        if: github.event_name != 'release'
+        uses: actions/upload-artifact@v4
+        with:
+          name: rapidsnark-Android-OpenMP
+          path: |
+            package_android_openmp
+          if-no-files-found: error
+
+      - name: Upload Android x86_64 dev artifacts
+        if: github.event_name != 'release'
+        uses: actions/upload-artifact@v4
+        with:
+          name: rapidsnark-Android-x86_64
+          path: |
+            package_android_x86_64
+          if-no-files-found: error
+
+      - name: Upload Android x86_64 dev artifacts (with OpenMP)
+        if: github.event_name != 'release'
+        uses: actions/upload-artifact@v4
+        with:
+          name: rapidsnark-Android-OpenMP-x86_64
+          path: |
+            package_android_openmp_x86_64
+          if-no-files-found: error
+
+      - name: Upload Android ARM64 release artifacts
         if: github.event_name == 'release'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -x
-          mkdir rapidsnark-android-arm64-${{ github.ref_name }}
+          mkdir -p rapidsnark-android-arm64-${{ github.ref_name }}
           cp -r package_android/* rapidsnark-android-arm64-${{ github.ref_name }}/
           zip -r rapidsnark-android-arm64-${{ github.ref_name }}.zip rapidsnark-android-arm64-${{ github.ref_name }}
           gh release upload ${{ github.event.release.tag_name }} rapidsnark-android-arm64-${{ github.ref_name }}.zip
 
-      - name: upload Android x86_64 artifacts
+      - name: Upload Android x86_64 release artifacts
         if: github.event_name == 'release'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -x
-          mkdir rapidsnark-android-x86_64-${{ github.ref_name }}
+          mkdir -p rapidsnark-android-x86_64-${{ github.ref_name }}
           cp -r package_android_x86_64/* rapidsnark-android-x86_64-${{ github.ref_name }}/
           zip -r rapidsnark-android-x86_64-${{ github.ref_name }}.zip rapidsnark-android-x86_64-${{ github.ref_name }}
           gh release upload ${{ github.event.release.tag_name }} rapidsnark-android-x86_64-${{ github.ref_name }}.zip
 
-      - name: upload Linux x86_64 artifacts
+      - name: Upload Linux x86_64 release artifacts
         if: github.event_name == 'release'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -x
-          mkdir rapidsnark-linux-x86_64-${{ github.ref_name }}
+          mkdir -p rapidsnark-linux-x86_64-${{ github.ref_name }}
           cp -r package/* rapidsnark-linux-x86_64-${{ github.ref_name }}/
           zip -r rapidsnark-linux-x86_64-${{ github.ref_name }}.zip rapidsnark-linux-x86_64-${{ github.ref_name }}
           gh release upload ${{ github.event.release.tag_name }} rapidsnark-linux-x86_64-${{ github.ref_name }}.zip
 
+      - name: Upload Linux x86_64 noasm release artifacts
+        if: github.event_name == 'release'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -x
+          mkdir -p rapidsnark-linux-x86_64-noasm-${{ github.ref_name }}
+          cp -r package_noasm/* rapidsnark-linux-x86_64-noasm-${{ github.ref_name }}/
+          zip -r rapidsnark-linux-x86_64-noasm-${{ github.ref_name }}.zip rapidsnark-linux-x86_64-noasm-${{ github.ref_name }}
+          gh release upload ${{ github.event.release.tag_name }} rapidsnark-linux-x86_64-noasm-${{ github.ref_name }}.zip
+
+  build-linux-arm64:
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: "recursive"
+
+      - name: install requirements
+        uses: awalsh128/cache-apt-pkgs-action@v1
+        with:
+          packages: build-essential cmake m4 nasm
+          version: arm64-1.0
+
+      - name: Cache gmp build
+        uses: actions/cache@v4
+        with:
+          path: |
+            depends/gmp
+            depends/gmp-6.3.0.tar.xz
+          key: ${{ runner.os }}-${{ runner.arch }}-gmp-${{ hashFiles('build_gmp.sh') }}
+
+      - name: Build gmp for Linux arm64
+        run: if [[ ! -d "depends/gmp/package_aarch64" ]]; then ./build_gmp.sh aarch64; fi
+
+      - name: Build prover Linux arm64
+        run: |
+          make host_arm64
+          ctest --rerun-failed --output-on-failure
+
+      - name: Test rapidsnark
+        run: |
+          set -x
+          set -e
+          time package_arm64/bin/prover testdata/circuit_final.zkey testdata/witness.wtns proof.json public.json
+          time package_arm64/bin/verifier testdata/verification_key.json public.json proof.json
+          # make a wrong public.json by decrementing the first element by 1
+          (value_0=$(jq '.[0]' public.json | tr -d '"') && value_0=$(echo "$value_0 - 1" | BC_LINE_LENGTH=100 bc) && jq --arg value_0 "$value_0" '.[0] = $value_0' public.json) > public_bad.json
+          set +e
+          time package_arm64/bin/verifier testdata/verification_key.json public_bad.json proof.json
+          exit_code=$?
+          set -e
+          [ $exit_code -ne 0 ]
+
+      - name: Upload Linux arm64 dev artifacts
+        if: github.event_name != 'release'
+        uses: actions/upload-artifact@v4
+        with:
+          name: rapidsnark-linux-arm64
+          path: |
+            package_arm64
+          if-no-files-found: error
+
+      - name: Upload Linux ARM64 release artifacts
+        if: github.event_name == 'release'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -x
+          mkdir -p rapidsnark-linux-arm64-${{ github.ref_name }}
+          cp -r package_arm64/* rapidsnark-linux-arm64-${{ github.ref_name }}/
+          zip -r rapidsnark-linux-arm64-${{ github.ref_name }}.zip rapidsnark-linux-arm64-${{ github.ref_name }}
+          gh release upload ${{ github.event.release.tag_name }} rapidsnark-linux-arm64-${{ github.ref_name }}.zip
+
   build-apple-arm64:
-    runs-on: macos-13-xlarge
+    runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: "recursive"
 
       - name: Cache gmp build
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             depends/gmp
-            depends/gmp-6.2.1.tar.xz
-          key: ${{ runner.os }}-gmp-arm64-${{ hashFiles('build_gmp.sh') }}
+            depends/gmp-6.3.0.tar.xz
+          key: ${{ runner.os }}-${{ runner.arch }}-gmp-${{ hashFiles('build_gmp.sh') }}
 
       - name: build
         run: |
           if [[ ! -d "depends/gmp/package_ios_arm64" ]]; then ./build_gmp.sh ios; fi
           if [[ ! -d "depends/gmp/package_iphone_simulator" ]]; then ./build_gmp.sh ios_simulator; fi
           if [[ ! -d "depends/gmp/package_macos_arm64" ]]; then ./build_gmp.sh macos_arm64; fi
-          
-          mkdir build_prover_ios && cd build_prover_ios
-          cmake .. -GXcode -DTARGET_PLATFORM=IOS -DCMAKE_INSTALL_PREFIX=../package_ios
-          xcodebuild -destination 'generic/platform=iOS' -scheme rapidsnarkStatic -project rapidsnark.xcodeproj -configuration Release
-          cp ../depends/gmp/package_ios_arm64/lib/libgmp.a src/Release-iphoneos
-          cd ../
-          
-          mkdir build_prover_ios_simulator && cd build_prover_ios_simulator
-          cmake .. -GXcode -DTARGET_PLATFORM=IOS -DCMAKE_INSTALL_PREFIX=../package_ios_simulator -DUSE_ASM=NO
-          xcodebuild -destination 'generic/platform=iOS Simulator' -scheme rapidsnarkStatic -project rapidsnark.xcodeproj
-          cp ../depends/gmp/package_iphone_simulator/lib/libgmp.a src/Debug-iphonesimulator
-          cd ../
-          
-          mkdir build_prover_macos_arm64 && cd build_prover_macos_arm64
-          cmake .. -DTARGET_PLATFORM=macos_arm64 -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=../package_macos_arm64
-          make -j4 && make install
+          make ios
+          make ios_simulator
+          make macos_arm64
+          cd build_prover_macos_arm64 && ctest --rerun-failed --output-on-failure
 
-      - name: test prover
+      - name: test rapidsnark
         run: |
           set -x
           set -e
-          npm install -g snarkjs
-          package_macos_arm64/bin/prover testdata/circuit_final.zkey testdata/witness.wtns proof.json public.json
-          snarkjs groth16 verify testdata/verification_key.json public.json proof.json
+          time package_macos_arm64/bin/prover testdata/circuit_final.zkey testdata/witness.wtns proof.json public.json
+          time package_macos_arm64/bin/verifier testdata/verification_key.json public.json proof.json
+          # make a wrong public.json by decrementing the first element by 1
+          (value_0=$(jq '.[0]' public.json | tr -d '"') && value_0=$(echo "$value_0 - 1" | BC_LINE_LENGTH=100 bc) && jq --arg value_0 "$value_0" '.[0] = $value_0' public.json) > public_bad.json
+          set +e
+          time package_macos_arm64/bin/verifier testdata/verification_key.json public_bad.json proof.json
+          exit_code=$?
+          set -e
+          [ $exit_code -ne 0 ]
 
-      - name: upload iOS artifacts
+      - name: upload macOS arm64 dev artifacts
+        if: github.event_name != 'release'
+        uses: actions/upload-artifact@v4
+        with:
+          name: rapidsnark-macOS-arm64
+          path: |
+            package_macos_arm64
+          if-no-files-found: error
+
+      - name: upload iOS dev artifacts
+        if: github.event_name != 'release'
+        uses: actions/upload-artifact@v4
+        with:
+          name: rapidsnark-iOS
+          path: |
+            build_prover_ios/src/Release-iphoneos
+          if-no-files-found: error
+
+      - name: upload iOS Simulator dev artifacts
+        if: github.event_name != 'release'
+        uses: actions/upload-artifact@v4
+        with:
+          name: rapidsnark-iOS-Simulator
+          path: |
+            build_prover_ios_simulator/src/Debug-iphonesimulator
+          if-no-files-found: error
+
+      - name: upload iOS release artifacts
         if: github.event_name == 'release'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -x
-          mkdir rapidsnark-iOS-${{ github.ref_name }}
+          mkdir -p rapidsnark-iOS-${{ github.ref_name }}
           cp -r build_prover_ios/src/Release-iphoneos/* rapidsnark-iOS-${{ github.ref_name }}/
           zip -r rapidsnark-iOS-${{ github.ref_name }}.zip rapidsnark-iOS-${{ github.ref_name }}
           gh release upload ${{ github.event.release.tag_name }} rapidsnark-iOS-${{ github.ref_name }}.zip
 
-      - name: upload iOS Simulator artifacts
+      - name: upload iOS Simulator release artifacts
         if: github.event_name == 'release'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -x
-          mkdir rapidsnark-iOS-Simulator-${{ github.ref_name }}
+          mkdir -p rapidsnark-iOS-Simulator-${{ github.ref_name }}
           cp -r build_prover_ios_simulator/src/Debug-iphonesimulator/* rapidsnark-iOS-Simulator-${{ github.ref_name }}/
           zip -r rapidsnark-iOS-Simulator-${{ github.ref_name }}.zip rapidsnark-iOS-Simulator-${{ github.ref_name }}
           gh release upload ${{ github.event.release.tag_name }} rapidsnark-iOS-Simulator-${{ github.ref_name }}.zip
 
-      - name: upload macOS arm64 artifacts
+      - name: upload macOS arm64 release artifacts
         if: github.event_name == 'release'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -x
-          mkdir rapidsnark-macOS-arm64-${{ github.ref_name }}
+          mkdir -p rapidsnark-macOS-arm64-${{ github.ref_name }}
           cp -r package_macos_arm64/* rapidsnark-macOS-arm64-${{ github.ref_name }}/
           zip -r rapidsnark-macOS-arm64-${{ github.ref_name }}.zip rapidsnark-macOS-arm64-${{ github.ref_name }}
           gh release upload ${{ github.event.release.tag_name }} rapidsnark-macOS-arm64-${{ github.ref_name }}.zip
 
   build-apple-x86_64:
-    runs-on: macos-13
+    runs-on: macos-15-intel
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: "recursive"
 
       - name: Cache gmp build
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             depends/gmp
-            depends/gmp-6.2.1.tar.xz
-          key: ${{ runner.os }}-gmp-x86_64-${{ hashFiles('build_gmp.sh') }}-2
+            depends/gmp-6.3.0.tar.xz
+          key: ${{ runner.os }}-${{ runner.arch }}-gmp-${{ hashFiles('build_gmp.sh') }}
 
       - name: install dependencies
         run: |
@@ -190,26 +373,39 @@ jobs:
       - name: build
         run: |
           if [[ ! -d "depends/gmp/package_macos_x86_64" ]]; then ./build_gmp.sh macos_x86_64; fi
+          make macos_x86_64
+          ctest --rerun-failed --output-on-failure
 
-          mkdir build_prover_macos_x86_64 && cd build_prover_macos_x86_64
-          cmake .. -DTARGET_PLATFORM=macos_x86_64 -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=../package_macos_x86_64
-          make -j4 && make install
-
-      - name: test prover
+      - name: test rapidsnark
         run: |
           set -x
           set -e
-          npm install -g snarkjs
-          package_macos_x86_64/bin/prover testdata/circuit_final.zkey testdata/witness.wtns proof.json public.json
-          snarkjs groth16 verify testdata/verification_key.json public.json proof.json
+          time package_macos_x86_64/bin/prover testdata/circuit_final.zkey testdata/witness.wtns proof.json public.json
+          time package_macos_x86_64/bin/verifier testdata/verification_key.json public.json proof.json
+          # make a wrong public.json by decrementing the first element by 1
+          (value_0=$(jq '.[0]' public.json | tr -d '"') && value_0=$(echo "$value_0 - 1" | BC_LINE_LENGTH=100 bc) && jq --arg value_0 "$value_0" '.[0] = $value_0' public.json) > public_bad.json
+          set +e
+          time package_macos_x86_64/bin/verifier testdata/verification_key.json public_bad.json proof.json
+          exit_code=$?
+          set -e
+          [ $exit_code -ne 0 ]
 
-      - name: upload macOS x86_64 artifacts
+      - name: upload macOS x86_64 dev artifacts
+        if: github.event_name != 'release'
+        uses: actions/upload-artifact@v4
+        with:
+          name: rapidsnark-macOS-x86_64
+          path: |
+            package_macos_x86_64
+          if-no-files-found: error
+
+      - name: upload macOS x86_64 release artifacts
         if: github.event_name == 'release'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -x
-          mkdir rapidsnark-macos-x86_64-${{ github.ref_name }}
-          cp -r package_macos_x86_64/* rapidsnark-macos-x86_64-${{ github.ref_name }}/
-          zip -r rapidsnark-macos-x86_64-${{ github.ref_name }}.zip rapidsnark-macos-x86_64-${{ github.ref_name }}
-          gh release upload ${{ github.event.release.tag_name }} rapidsnark-macos-x86_64-${{ github.ref_name }}.zip
+          mkdir -p rapidsnark-macOS-x86_64-${{ github.ref_name }}
+          cp -r package_macos_x86_64/* rapidsnark-macOS-x86_64-${{ github.ref_name }}/
+          zip -r rapidsnark-macOS-x86_64-${{ github.ref_name }}.zip rapidsnark-macOS-x86_64-${{ github.ref_name }}
+          gh release upload ${{ github.event.release.tag_name }} rapidsnark-macOS-x86_64-${{ github.ref_name }}.zip

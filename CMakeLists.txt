@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 cmake_minimum_required(VERSION 3.22.1)
 set(CMAKE_CXX_STANDARD 17)
 if(USE_CUDA)
@@ -5,6 +6,9 @@ if(USE_CUDA)
     set(CMAKE_CUDA_STANDARD_REQUIRED TRUE)
 endif()
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
+=======
+cmake_minimum_required(VERSION 3.10)
+>>>>>>> upstream/main
 
 include(cmake/platform.cmake)
 
@@ -13,9 +17,13 @@ set(USE_OPENMP ON CACHE BOOL "Use OpenMP")
 set(BUILD_SERVER OFF CACHE BOOL "Build Server mode")
 set(G2_ENABLED OFF CACHE BOOL "enable G2 curve")
 
+<<<<<<< HEAD
 if(G2_ENABLED)
     add_definitions(-DG2_ENABLED)
 endif()
+=======
+project(rapidsnark LANGUAGES CXX C ASM)
+>>>>>>> upstream/main
 
 if(USE_CUDA)
     project(rapidsnark LANGUAGES CXX CUDA ASM)
@@ -23,8 +31,12 @@ else()
     project(rapidsnark LANGUAGES CXX ASM)
 endif()
 
+<<<<<<< HEAD
 
 message("TARGET_PLATFORM=" ${TARGET_PLATFORM})
+=======
+message("BITS_PER_CHUNK=" ${BITS_PER_CHUNK})
+>>>>>>> upstream/main
 message("USE_ASM=" ${USE_ASM})
 message("USE_OPENMP=" ${USE_OPENMP})
 message("CMAKE_CROSSCOMPILING=" ${CMAKE_CROSSCOMPILING})
@@ -65,8 +77,13 @@ endif()
 
 add_subdirectory(src)
 
+<<<<<<< HEAD
 if(BUILD_SERVER)
     install(TARGETS proverServer prover test_prover rapidsnark fr fq
+=======
+
+install(TARGETS prover verifier rapidsnark rapidsnarkStatic rapidsnarkStaticFrFq test_prover fr fq
+>>>>>>> upstream/main
     RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin
     BUNDLE DESTINATION ${CMAKE_INSTALL_PREFIX}/app
     LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
@@ -80,5 +97,7 @@ endif()
 install(FILES "${GMP_LIB_DIR}/${GMP_LIB_FILE}"
     DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
 
-install(FILES src/prover.h
+install(FILES src/prover.h src/verifier.h
     DESTINATION ${CMAKE_INSTALL_PREFIX}/include)
+
+enable_testing()

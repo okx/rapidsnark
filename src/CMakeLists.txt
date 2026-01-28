@@ -58,8 +58,17 @@ if(USE_ASM)
     endif()
 endif()
 
+if(DEFINED BITS_PER_CHUNK)
+    add_definitions(-DMSM_BITS_PER_CHUNK=${BITS_PER_CHUNK})
+endif()
+
 if(USE_ASM AND ARCH MATCHES "x86_64")
+<<<<<<< HEAD
     if(CMAKE_HOST_SYSTEM_NAME MATCHES "Darwin")
+=======
+
+    if (CMAKE_HOST_SYSTEM_NAME MATCHES "Darwin" AND NOT TARGET_PLATFORM MATCHES "^android(_x86_64)?")
+>>>>>>> upstream/main
         set(NASM_FLAGS -fmacho64 --prefix _)
     else()
         set(NASM_FLAGS -felf64 -DPIC)
@@ -83,7 +92,7 @@ set(FR_SOURCES
 
 if(USE_ASM)
     if(ARCH MATCHES "arm64")
-        set(FR_SOURCES ${FR_SOURCES} ../build/fr_raw_arm64.s ../build/fr_raw_generic.cpp ../build/fr_generic.cpp)
+        set(FR_SOURCES ${FR_SOURCES} ../build/fr_raw_arm64.s ../build/fr_generic.cpp)
     elseif(ARCH MATCHES "x86_64")
         set(FR_SOURCES ${FR_SOURCES} ../build/fr_asm.o)
     endif()
@@ -103,7 +112,7 @@ set(FQ_SOURCES
 
 if(USE_ASM)
     if(ARCH MATCHES "arm64")
-        set(FQ_SOURCES ${FQ_SOURCES} ../build/fq_raw_arm64.s ../build/fq_raw_generic.cpp ../build/fq_generic.cpp)
+        set(FQ_SOURCES ${FQ_SOURCES} ../build/fq_raw_arm64.s ../build/fq_generic.cpp)
     elseif(ARCH MATCHES "x86_64")
         set(FQ_SOURCES ${FQ_SOURCES} ../build/fq_asm.o)
     endif()
@@ -130,7 +139,13 @@ set(LIB_SOURCES
     groth16.hpp
     cuda.cpp
     prover.cpp
+<<<<<<< HEAD
     fullprover.cpp
+=======
+    prover.h
+    verifier.cpp
+    verifier.h
+>>>>>>> upstream/main
     ../depends/ffiasm/c/misc.cpp
     ../depends/ffiasm/c/naf.cpp
     ../depends/ffiasm/c/splitparstr.cpp
@@ -189,15 +204,52 @@ if(USE_CUDA)
     target_link_libraries(prover cryptography_cuda)
 endif(USE_CUDA)
 
+<<<<<<< HEAD
+=======
+add_executable(verifier main_verifier.cpp)
+target_link_libraries(verifier rapidsnarkStatic)
 
-if(USE_LOGGER OR NOT USE_OPENMP)
+add_library(rapidsnark SHARED ${LIB_SOURCES})
+>>>>>>> upstream/main
+
+if((USE_LOGGER OR NOT USE_OPENMP) AND NOT TARGET_PLATFORM MATCHES "android")
     target_link_libraries(prover pthread)
+    target_link_libraries(verifier pthread)
 endif()
 
 if(USE_SODIUM)
     target_link_libraries(prover sodium)
 endif()
 
+<<<<<<< HEAD
+=======
+option(BUILD_TESTS "Build the tests" ON)
+
+if(BUILD_TESTS)
+    enable_testing()
+    add_executable(test_public_size test_public_size.c)
+    target_link_libraries(test_public_size rapidsnarkStaticFrFq pthread)
+    add_test(NAME test_public_size COMMAND test_public_size circuit_final.zkey 86
+            WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/testdata)
+endif()
+
+if(OpenMP_CXX_FOUND)
+
+    if(TARGET_PLATFORM MATCHES "android")
+        target_link_libraries(prover -static-openmp -fopenmp)
+        target_link_libraries(verifier -static-openmp -fopenmp)
+        target_link_libraries(rapidsnark -static-openmp -fopenmp)
+
+    elseif(CMAKE_HOST_SYSTEM_NAME STREQUAL "Linux")
+        target_link_libraries(prover OpenMP::OpenMP_CXX)
+        target_link_libraries(verifier OpenMP::OpenMP_CXX)
+        target_link_libraries(test_public_size OpenMP::OpenMP_CXX)
+    endif()
+
+endif()
+
+
+>>>>>>> upstream/main
 add_executable(test_prover test_prover.cpp)
 target_include_directories(
     test_prover

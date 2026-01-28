@@ -1,14 +1,23 @@
 #include "fq.hpp"
 #include <cstdint>
 #include <cstring>
-#include <cassert>
 
 FqElement Fq_q  = {0, 0x80000000, {0x3c208c16d87cfd47,0x97816a916871ca8d,0xb85045b68181585d,0x30644e72e131a029}};
 FqElement Fq_R2 = {0, 0x80000000, {0xf32cfc5b538afa89,0xb5e71911d44501fb,0x47ab1eff0a417ff6,0x06d89f71cab8351f}};
 FqElement Fq_R3 = {0, 0x80000000, {0xb1cd6dafda1530df,0x62f210e6a7283db6,0xef7f0b0c0ada0afb,0x20fd6e902d592544}};
 
 static FqRawElement half = {0x9e10460b6c3e7ea3,0xcbc0b548b438e546,0xdc2822db40c0ac2e,0x183227397098d014};
+static FqRawElement Fq_rawR2 = {0xf32cfc5b538afa89,0xb5e71911d44501fb,0x47ab1eff0a417ff6,0x06d89f71cab8351f};
 
+void Fq_rawMSquare(FqRawElement pRawResult, const FqRawElement pRawA)
+{
+    Fq_rawMMul(pRawResult, pRawA, pRawA);
+}
+
+void Fq_rawToMontgomery(FqRawElement pRawResult, const FqRawElement &pRawA)
+{
+    Fq_rawMMul(pRawResult, pRawA, Fq_rawR2);
+}
 
 void Fq_copy(PFqElement r, const PFqElement a)
 {
