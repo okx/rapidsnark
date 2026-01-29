@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+  # Base rapidsnark image (prover server only)
+  rapidsnark-base:
+    build:
+      context: .
+      dockerfile: Dockerfile.arm64
+    image: rapidsnark-arm64-base:latest
+    platform: linux/arm64
+    profiles:
+      - base
+
+  # Extended image with witness generator
+  rapidsnark-witgen:
+    depends_on:
+      - rapidsnark-base
+    build:
+      context: .
+      dockerfile: Dockerfile.arm64.witgen
+      args:
+        # Path to circuits directory relative to build context
+        CIRCUITS_PATH: ../circuits-v2
+        # Use the base image we just built
+        BASE_IMAGE: rapidsnark-arm64-base:latest
+    image: rapidsnark-arm64-witgen:latest
+    platform: linux/arm64
+    container_name: rapidsnark-witgen-test
+    volumes:
+      # Mount a workspace for outputs
+      - ./docker-outputs:/workspace/outputs
+    environment:
+      - LOCAL_CIRCUITS_PATH=/workspace/circuits
+      - CIRCOM_BIN_PATH=/root/.cargo/bin/circom
+    command: >
+      bash -c "
+      echo '=== Verifying ARM64 witness generator build ===' &&
+      echo '' &&
+      echo '=== Witness generator info ===' &&
+      file ./build/02x03 &&
+      ls -lh ./build/02x03 &&
+      echo '' &&
+      echo '=== ARM64 assembly symbols ===' &&
+      nm ./build/02x03 | grep -E 'Fr_raw|Fq_raw' | head -10 &&
+      echo '' &&
+      echo '=== Prover server info ===' &&
+      file ./package/bin/proverServer &&
+      echo '' &&
+      echo '=== Circuits available ===' &&
+      ls -la /workspace/circuits/ | head -10 &&
+      echo '' &&
+      echo '=== Ready for testing ===' &&
+      echo 'Witness generator: /workspace/build/02x03' &&
+      echo 'Prover server: /workspace/package/bin/proverServer' &&
+      echo 'Circuits: /workspace/circuits/' &&
+      echo 'Outputs: /workspace/outputs/' &&
+      echo '' &&
+      echo 'Example commands:' &&
+      echo '  ./build/02x03 /workspace/circuits/test/input.json /workspace/outputs/witness.wtns' &&
+      echo '  ./package/bin/prover circuit.zkey /workspace/outputs/witness.wtns /workspace/outputs/proof.json /workspace/outputs/public.json' &&
+      echo '' &&
+      echo 'Starting interactive shell...' &&
+      /bin/bash
+      "
+    stdin_open: true
+    tty: true

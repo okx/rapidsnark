@@ -1,0 +1,97 @@
+# syntax=docker/dockerfile:1.4
+# Extend from the base rapidsnark ARM64 image
+# Build the base first: docker build --platform linux/arm64 -t rapidsnark-arm64-base -f Dockerfile.arm64 .
+ARG BASE_IMAGE=rapidsnark-arm64-base
+FROM ${BASE_IMAGE}
+
+ARG DEBIAN_FRONTEND=noninteractive
+
+# Build arguments
+# Note: CIRCUITS_PATH is relative to build context (converted from absolute path by build script)
+ARG CIRCUITS_PATH=circuits-v2
+ARG RAPIDSNARK_PATH=rapidsnark
+
+# Install additional dependencies for witness generator with apt cache
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    apt-get update && apt-get install -y --no-install-recommends \
+    nodejs \
+    npm
+
+# Install Rust for circom with cargo cache
+RUN --mount=type=cache,target=/root/.cargo/registry,sharing=locked \
+    --mount=type=cache,target=/root/.cargo/git,sharing=locked \
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+ENV PATH="/root/.cargo/bin:${PATH}"
+
+# Install circom with cargo cache and build cache
+RUN --mount=type=cache,target=/root/.cargo/registry,sharing=locked \
+    --mount=type=cache,target=/root/.cargo/git,sharing=locked \
+    --mount=type=cache,target=/tmp/circom-build/target,sharing=locked \
+    git clone https://github.com/iden3/circom.git /tmp/circom-src && \
+    cd /tmp/circom-src && \
+    CARGO_TARGET_DIR=/tmp/circom-build/target cargo build --release && \
+    cargo install --path circom && \
+    rm -rf /tmp/circom-src
+
+WORKDIR /workspace
+
+# Install Node.js dependencies with npm cache
+RUN --mount=type=cache,target=/root/.npm,sharing=locked \
+    npm install || true
+
+# Generate field arithmetic code (fr/fq with ARM64 assembly)
+# This should already exist from base image, but regenerate to ensure we have ARM64 assembly
+RUN --mount=type=cache,target=/root/.npm,sharing=locked \
+    npm install --prefix depends/ffiasm || true && \
+    mkdir -p build && \
+    cd build && \
+    echo "Generating Fq field arithmetic..." && \
+    node ../depends/ffiasm/src/buildzqfield.js \
+        -q 21888242871839275222246405745257275088696311157297823662689037894645226208583 \
+        -n Fq && \
+    echo "Generating Fr field arithmetic..." && \
+    node ../depends/ffiasm/src/buildzqfield.js \
+        -q 21888242871839275222246405745257275088548364400416034343698204186575808495617 \
+        -n Fr && \
+    ls -lh *.hpp *.cpp *_arm64.s 2>/dev/null | head -20 && \
+    echo "Field arithmetic code generated successfully"
+
+# Copy updated build script and test scripts (may have been modified since base image was built)
+COPY ${RAPIDSNARK_PATH}/build_circuit_arm64.sh /workspace/build_circuit_arm64.sh
+COPY ${RAPIDSNARK_PATH}/auto_test_proof.sh /workspace/auto_test_proof.sh
+RUN chmod +x /workspace/auto_test_proof.sh
+
+# Copy circuits into container
+# Build context must be parent directory containing both rapidsnark/ and circuits/
+COPY ${CIRCUITS_PATH} /workspace/circuits/
+
+# Validate circuits were copied
+RUN if [ ! -d "/workspace/circuits" ]; then \
+        echo "ERROR: Circuits directory not found at /workspace/circuits"; \
+        echo "Please provide circuits via CIRCUITS_PATH build arg"; \
+        exit 1; \
+    fi && \
+    echo "Circuits directory found:" && \
+    ls -la /workspace/circuits/ | head -10
+
+# Build witness generator with ARM64 assembly
+RUN chmod +x build_circuit_arm64.sh && \
+    echo "=== Pre-build check ===" && \
+    ls -la build/ && \
+    echo "=== Running build_circuit_arm64.sh ===" && \
+    LOCAL_CIRCUITS_PATH=/workspace/circuits \
+    CIRCOM_BIN_PATH=/root/.cargo/bin/circom \
+    ./build_circuit_arm64.sh
+
+# Verify the witness generator build
+RUN echo "=== Witness generator verification ===" && \
+    ls -lh /workspace/build/02x03 && \
+    echo "" && \
+    echo "=== ARM64 assembly symbols ===" && \
+    nm /workspace/build/02x03 | grep -E "Fr_raw" | head -10 && \
+    echo "" && \
+    echo "=== Build verification complete ==="
+
+# Default command
+CMD ["/workspace/package/bin/proverServer", "8080"]

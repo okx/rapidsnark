@@ -1,10 +1,15 @@
+# syntax=docker/dockerfile:1.4
 FROM --platform=linux/arm64 ubuntu:22.04
 
 ARG DEBIAN_FRONTEND=noninteractive
+
 # Use Aliyun mirror for faster downloads
 RUN sed -i 's|ports.ubuntu.com|mirrors.aliyun.com|g' /etc/apt/sources.list
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
+# Install build dependencies with apt cache
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     cmake \
     ca-certificates \
@@ -15,16 +20,51 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     m4 \
     git \
     libomp-dev \
-  && update-ca-certificates \
-  && rm -rf /var/lib/apt/lists/*
+    nasm \
+  && update-ca-certificates
 
 WORKDIR /workspace
 
 # Copy the source code
 COPY . .
 
-# Build pistache first
+# Initialize submodules for dependencies
+RUN git submodule update --init --recursive || true
+
+# Build pistache
 RUN chmod +x build_pistache.sh && ./build_pistache.sh
 
-# Build prover-server
-CMD ["make", "prover-server"]
+# Build prover-server using system GMP
+RUN rm -rf build_prover_server_linux_arm64 && \
+    mkdir build_prover_server_linux_arm64 && \
+    cd build_prover_server_linux_arm64 && \
+    cmake .. \
+        -DTARGET_PLATFORM=aarch64 \
+        -DBUILD_SERVER=ON \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_INSTALL_PREFIX=../package \
+        -DUSE_OPENMP=ON \
+        -DUSE_LOGGER=ON \
+        -DGMP_INCLUDE_DIR=/usr/include \
+        -DGMP_LIB_DIR=/usr/lib/aarch64-linux-gnu && \
+    make -j$(nproc)
+
+# Manually install binaries (skip GMP copy since we use system GMP)
+RUN mkdir -p package/bin package/lib package/include && \
+    cp build_prover_server_linux_arm64/src/proverServer package/bin/ && \
+    cp build_prover_server_linux_arm64/src/prover package/bin/ && \
+    cp build_prover_server_linux_arm64/src/test_prover package/bin/ && \
+    cp build_prover_server_linux_arm64/src/librapidsnark.so package/lib/ && \
+    cp build_prover_server_linux_arm64/src/libfr.a package/lib/ && \
+    cp build_prover_server_linux_arm64/src/libfq.a package/lib/ && \
+    cp src/prover.h package/include/ && \
+    echo "Installed binaries to package/ (using system GMP, no bundling needed)"
+
+# Verify the build
+RUN echo "=== Prover server built ===" && \
+    ls -lh /workspace/package/bin/ && \
+    echo "=== Library dependencies ===" && \
+    ldd /workspace/package/bin/proverServer | head -10
+
+# Default command (run the prover server)
+CMD ["/workspace/package/bin/proverServer", "8080"]

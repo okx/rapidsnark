@@ -78,7 +78,6 @@ package*
 build/
 
 .idea/
-<<<<<<< HEAD
 build/CMakeFiles
 build/src
 build/cmake_install.cmake
@@ -97,6 +96,15 @@ zkeys/*_old.zkey
 
 # Generated witness files
 *.wtns
-=======
 .vscode/
->>>>>>> upstream/main
+test_*
+*.json
+final_test_02x03.sh
+generate_valid_input.ts
+run_auto_test.sh
+run_full_test.sh
+run_test_02x03.sh
+auto_test_proof.sh
+complete_auto_test.sh
+debug_nodejs_install.sh
+discover_circuit_inputs.sh
